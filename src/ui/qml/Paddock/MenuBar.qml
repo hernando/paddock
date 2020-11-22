@@ -1,26 +1,35 @@
 import QtQuick 2.12
-import QtQuick.Controls 2.12 as QQC2
+import QtQuick.Controls 2.12 as QQC
 
-QQC2.MenuBar {
+import Paddock 1.0
+
+QQC.MenuBar {
     id: root
 
-//    font.pixelSize: currentTheme.sizes.font.small
-//    height: currentTheme.sizes.base5
+    property Session session
 
-//    delegate: QQC2.MenuBarItem {
-//        id: menuBarItem
-//
-//        contentItem: Gtk.MenuText {
-//            text: menuBarItem.text
-//            font: menuBarItem.font
-//        }
-//
-//        background: {
-//            color:
-//        }
-//    }
-
-//    background: Rectangle {
-//        color: currentTheme.colors.neutral.darker
-//    }
+    QQC.Menu {
+        title: qsTr("&File")
+        QQC.Action { text: qsTr("&New...") }
+        QQC.Action {
+            enabled: !session.isNsmSession
+            text: qsTr("&Open...")
+        }
+        QQC.Action {
+            enabled: session.isNsmSession
+            text: qsTr("&Import into...")
+        }
+        QQC.Action { text: qsTr("&Save") }
+        QQC.Action {
+            enabled: !session.isNsmSession
+            text: qsTr("Save &As...")
+        }
+        QQC.MenuSeparator { }
+        QQC.Action { text: qsTr("&Close") }
+        QQC.Action { text: qsTr("&Quit") }
+    }
+    QQC.Menu {
+        title: qsTr("&Help")
+        QQC.Action { text: qsTr("&About") }
+    }
 }

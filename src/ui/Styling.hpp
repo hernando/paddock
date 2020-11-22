@@ -22,8 +22,8 @@ signals:
 
 private:
     qreal _scaling{1};
-    QQmlPropertyMap* _colors{nullptr};
     QQmlPropertyMap* _sizes{nullptr};
+    QQmlPropertyMap* _colors{nullptr};
 };
 }
 }

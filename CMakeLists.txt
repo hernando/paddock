@@ -7,17 +7,12 @@ set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 include(BaseConfig)
 include(FindDependencies)
 
+include_directories(ext/expected/include)
+
 add_subdirectory(src/core)
 add_subdirectory(src/ui)
 
-add_executable(paddock src/main.cpp)
-target_link_libraries(
-    paddock
-  PRIVATE
-    paddock::ui
-    paddock::core
-    Qt5::Core Qt5::Quick
-)
+add_subdirectory(src/app)
 
 
 

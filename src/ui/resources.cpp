@@ -7,11 +7,6 @@
 void initUiResources()
 {
     Q_INIT_RESOURCE(resources);
-
-#define QML_REGISTER_SINGLETON_TYPE(Type)                                                                              \
-    qmlRegisterSingletonType<Type>(moduleName, 1, 0, #Type,                                                            \
-                                   [](QQmlEngine*, QJSEngine*) -> QObject* { return new Type(); })
-
 }
 
 namespace paddock

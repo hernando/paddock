@@ -11,21 +11,10 @@ ApplicationWindow {
     width: 1250
     height: 950
 
+    property Session session: globalSession
+
     menuBar: MenuBar {
-        Menu {
-            title: qsTr("&File")
-            Action { text: qsTr("&New...") }
-            Action { text: qsTr("&Open...") }
-            Action { text: qsTr("&Save") }
-            Action { text: qsTr("Save &As...") }
-            MenuSeparator { }
-            Action { text: qsTr("&Close") }
-            Action { text: qsTr("&Quit") }
-        }
-        Menu {
-            title: qsTr("&Help")
-            Action { text: qsTr("&About") }
-        }
+        session: root.session
     }
 
     ControllerLayout {
@@ -35,5 +24,12 @@ ApplicationWindow {
 
     background: Rectangle {
         color: Styling.colors.layers.background
+    }
+
+    Connections {
+        target: session
+        function onProgramChanged() {
+            console.log("Program changed")
+        }
     }
 }
