@@ -65,9 +65,11 @@ macro(paddock_find_package Package_Name)
     list(APPEND ${PROJECT_NAME}_FIND_PACKAGES_NOTFOUND "${Package_Name}")
   endif()
 
-  # for defines.h
-  set(__use_package_define "PADDOCK_USE_${PACKAGE_NAME}")
-  list(APPEND PADDOCK_FIND_PACKAGE_DEFINES ${__use_package_define})
+  if(${Package_Name}_name)
+    # for defines.h
+    set(__use_package_define "PADDOCK_USE_${PACKAGE_NAME}")
+    list(APPEND PADDOCK_FIND_PACKAGE_DEFINES ${__use_package_define})
+  endif()
 
 endmacro()
 
