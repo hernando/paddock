@@ -27,7 +27,13 @@ tl::expected<std::invoke_result_t<F, Args...>, std::error_code>
                               [task = std::move(task)]() mutable { task(); });
     try
     {
-        return future.get();
+        if constexpr (std::is_same_v<ReturnType, void>)
+        {
+            future.get();
+            return tl::expected<void, std::error_code>{};
+        }
+        else
+            return future.get();
     }
     catch (const std::future_error& error)
     {

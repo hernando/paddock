@@ -9,6 +9,8 @@ include(FindDependencies)
 
 include_directories(ext/expected/include)
 
+add_subdirectory(src/utils)
+
 add_subdirectory(src/core)
 add_subdirectory(src/ui)
 

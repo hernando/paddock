@@ -72,17 +72,26 @@ public:
 
     bool hasSession() const { return _nsmSession.has_value(); }
 
+    const std::string& name() const { return _name; }
+
     std::error_code open(const std::string& projectPath,
-                         const std::string& displayName,
+                         const std::string& sessionName,
                          const std::string& clientId)
     {
-        return openProgram(projectPath + "/program.pad");
+        if (auto ret = execInMainThread([&] {
+                    openProgram(projectPath + "/program.pad");
+                    _name = clientId;
+                }); !ret)
+        {
+            return ret.error();
+        }
+        return std::error_code{}; // success
     }
 
     std::error_code save()
     {
         core::log() << "SAVE";
-        return std::error_code(); // success
+        return std::error_code{}; // success
     }
 
     void sendDirty(bool dirty)
@@ -93,24 +102,23 @@ public:
 
     std::error_code openProgram(std::string filePath)
     {
-        auto program =
-            execInMainThread([this] { return new core::Program(_parent); });
+        auto program = new core::Program(_parent);
 
         if (!program)
-            return program.error();
+            return std::make_error_code(std::errc::io_error);
 
         _filePath = std::move(filePath);
 
         if (_program)
             _program->deleteLater();
 
-        _program = *program;
+        _program  = program;
 
         connect(_program, &core::Program::dirtyChanged,
                 [this]() { this->sendDirty(_program->dirty()); });
 
         Q_EMIT _parent->programChanged();
-        return std::error_code(); // success
+        return std::error_code{}; // success
     }
 
     core::Program* program() const { return _program; }
@@ -121,6 +129,7 @@ private:
     core::Program* _program{nullptr};
     std::string _filePath;
     std::optional<core::NsmSession> _nsmSession;
+    std::string _name{"Paddock"};
 };
 
 Session::Session()
@@ -138,6 +147,11 @@ core::Program* Session::program() const
 bool Session::isNsmSession() const
 {
     return _impl->hasSession();
+}
+
+const std::string& Session::name() const
+{
+    return _impl->name();
 }
 
 std::error_code Session::openProgram(const std::string& filePath)

@@ -90,9 +90,10 @@ public:
     lo::Address nsm;
     lo::ServerThread server;
     bool active{false};
+    std::string name;
 
-    static tl::expected<std::unique_ptr<_Impl>, std::error_code> connect(
-        const char* nsmUrl, Callbacks callbacks)
+    static Expected<std::unique_ptr<_Impl>> connect(const char* nsmUrl,
+                                                    Callbacks callbacks)
     {
         auto impl =
             std::unique_ptr<_Impl>(new _Impl(nsmUrl, std::move(callbacks)));
@@ -230,14 +231,14 @@ private:
         return 0;
     }
 
-    void notifyOpen(const std::string& path, const std::string& displayName,
+    void notifyOpen(const std::string& path, const std::string& sessionName,
                     const std::string& clientId)
     {
         if (!callbacks.openCallback)
             return;
         auto reply = prepareReply(NSM_CLIENT_OPEN);
 
-        if (auto error = callbacks.openCallback(path, displayName, clientId))
+        if (auto error = callbacks.openCallback(path, sessionName, clientId))
         {
             reply.sendError(ERR_GENERAL, error.message().c_str());
         }
@@ -291,8 +292,8 @@ private:
     }
 };
 
-tl::expected<NsmSession, std::error_code> NsmSession::startNsmSession(
-    const char* nsmUrl, Callbacks callbacks)
+Expected<NsmSession> NsmSession::startNsmSession(const char* nsmUrl,
+                                                 Callbacks callbacks)
 {
     log() << "Trying to connect to NSM server:" << nsmUrl;
 
@@ -311,8 +312,8 @@ NsmSession::NsmSession(std::unique_ptr<_Impl> impl)
 
 NsmSession::~NsmSession() = default;
 
-NsmSession::NsmSession(NsmSession&& other) = default;
-NsmSession& NsmSession::operator=(NsmSession&& other) = default;
+NsmSession::NsmSession(NsmSession&& other) noexcept = default;
+NsmSession& NsmSession::operator=(NsmSession&& other) noexcept = default;
 
 void NsmSession::setDirty(bool dirty)
 {

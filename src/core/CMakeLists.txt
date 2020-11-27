@@ -1,17 +1,19 @@
 add_library(paddock_core STATIC)
 add_library(paddock::core ALIAS paddock_core)
 
-target_sources(paddock_core PRIVATE
-  Globals.hpp
-  Globals.cpp
-  Log.hpp
-  Log.cpp
-  Program.cpp
-  Program.hpp
-  errors.hpp
-  errors.cpp
-  resources.hpp
-  resources.cpp
+target_sources(paddock_core
+  PUBLIC
+    Globals.hpp
+    Log.hpp
+    Program.cpp
+    errors.hpp
+    resources.hpp
+  PRIVATE
+    Globals.cpp
+    Log.cpp
+    Program.cpp
+    errors.cpp
+    resources.cpp
 )
 
 target_link_libraries(paddock_core
@@ -28,6 +30,7 @@ if(PADDOCK_USE_LIBLO)
 
   target_link_libraries(paddock_core
     PRIVATE
+      paddock::utils
       lo
   )
 endif()

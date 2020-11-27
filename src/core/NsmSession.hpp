@@ -1,6 +1,6 @@
 #pragma once
 
-#include <tl/expected.hpp>
+#include "utils/Expected.hpp"
 
 #include <functional>
 #include <memory>
@@ -26,7 +26,7 @@ public:
         // TODO
         std::function<void(bool)> activeCallback;
 
-        // Parameters are path, display name and client id (mandatory for JACK)
+        // Parameters are path, session name and client id (mandatory for JACK)
         std::function<std::error_code(const std::string&, const std::string&,
                                       const std::string&)>
             openCallback;
@@ -34,13 +34,13 @@ public:
         std::function<std::error_code()> saveCallback;
     };
 
-    static tl::expected<NsmSession, std::error_code> startNsmSession(
-        const char* nsmUrl, Callbacks callbacks);
+    static Expected<NsmSession> startNsmSession(const char* nsmUrl,
+                                                Callbacks callbacks);
 
     ~NsmSession();
 
-    NsmSession(NsmSession&& other);
-    NsmSession& operator=(NsmSession&& other);
+    NsmSession(NsmSession&& other) noexcept;
+    NsmSession& operator=(NsmSession&& other) noexcept;
 
     NsmSession(const NsmSession& other) = delete;
     NsmSession& operator=(const NsmSession& other) = delete;

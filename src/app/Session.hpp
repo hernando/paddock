@@ -29,6 +29,9 @@ public:
 
     bool isNsmSession() const;
 
+    /// Name to use for the JACK client
+    const std::string& name() const;
+
     std::error_code openProgram(const std::string& filePath);
 
 signals:
