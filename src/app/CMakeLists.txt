@@ -16,8 +16,9 @@ target_include_directories(paddock PRIVATE
 target_link_libraries(
     paddock
   PRIVATE
-    paddock::ui
     paddock::core
+    paddock::midi
+    paddock::ui
     Qt5::Core
     Qt5::Quick
 )

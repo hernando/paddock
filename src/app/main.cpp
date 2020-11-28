@@ -12,7 +12,10 @@
 #include <QQmlFileSelector>
 #include <QQuickView>
 
-#include "core/Log.hpp"
+#include "midi/Engine.hpp"
+#include "midi/Client.hpp"
+
+#include <iostream>
 
 int main(int argc, char** argv)
 {
@@ -28,6 +31,20 @@ int main(int argc, char** argv)
     paddock::ui::initResources();
 
     paddock::Session session;
+
+    auto midiEngine = paddock::midi::Engine::create();
+    if (!midiEngine)
+    {
+        std::cerr << midiEngine.error().message() << std::endl;
+        return -1;
+    }
+
+    auto midiClient = midiEngine->open(session.name().c_str());
+    if (!midiClient)
+    {
+        std::cout << midiClient.error().message() << std::endl;
+        return -1;
+    }
 
     QQmlApplicationEngine engine;
     new QQmlFileSelector(&engine); // Engine takes owership

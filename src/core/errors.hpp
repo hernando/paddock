@@ -8,7 +8,8 @@ namespace core
 {
 enum class ErrorType
 {
-    NsmSessionError
+    NsmSessionError,
+    MidiError
 };
 
 std::error_condition make_error_condition(ErrorType error);

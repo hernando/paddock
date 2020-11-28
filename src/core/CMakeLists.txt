@@ -22,7 +22,6 @@ target_link_libraries(paddock_core
 )
 
 if(PADDOCK_USE_LIBLO)
-
   target_sources(paddock_core PRIVATE
     NsmSession.hpp
     NsmSession.cpp
