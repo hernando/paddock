@@ -11,7 +11,7 @@ namespace midi
 bool KorgPadKontrol::matches(const ClientInfo& clientInfo)
 {
     return (clientInfo.name == "padKONTROL" &&
-            clientInfo.type == ClientInfo::Type::system &&
+            clientInfo.type == ClientType::system &&
             clientInfo.outputs.size() == 3 &&
             clientInfo.inputs.size() == 2);
 }

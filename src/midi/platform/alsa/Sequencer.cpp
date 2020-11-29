@@ -47,6 +47,8 @@ std::error_code make_error_code(Sequencer::Error error)
 {
     return std::error_code{static_cast<int>(error), alsaSeqErrorCategory};
 }
+
+using SeqHandle = std::unique_ptr<snd_seq_t, int (*)(snd_seq_t*)>;
 } // namespace
 
 tl::expected<Sequencer, std::error_code> Sequencer::open(const char* clientName)

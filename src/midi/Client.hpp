@@ -1,5 +1,7 @@
 #pragma once
 
+#include "PortInfo.hpp"
+
 #include <memory>
 #include <string>
 #include <vector>
@@ -8,46 +10,10 @@ namespace paddock
 {
 namespace midi
 {
-
-struct PortInfo
-{
-    enum class Direction
-    {
-        read,
-        write,
-        duplex
-    };
-
-    enum class Type
-    {
-        hardware,
-        software
-    };
-
-    std::string name;
-    int number;
-
-    Direction direction;
-    Type type;
-
-    // Client ID of the ClientInfo to which this port belongs
-    std::shared_ptr<void> clientId;
-
-    // Hardware device identifier to use for opening a raw midi connection
-    // to this port
-    std::string hwDeviceId;
-};
-
 struct ClientInfo
 {
-    enum class Type
-    {
-        user,
-        system
-    };
-
     std::string name;
-    Type type;
+    ClientType type;
     std::vector<PortInfo> inputs;
     std::vector<PortInfo> outputs;
 

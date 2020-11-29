@@ -12,40 +12,40 @@ namespace alsa
 {
 namespace
 {
-ClientInfo::Type getClientType(const snd_seq_client_info_t* info)
+ClientType getClientType(const snd_seq_client_info_t* info)
 {
     auto type = snd_seq_client_info_get_type(info);
     switch (type)
     {
     case SND_SEQ_USER_CLIENT:
-        return ClientInfo::Type::user;
+        return ClientType::user;
     case SND_SEQ_KERNEL_CLIENT:
-        return ClientInfo::Type::system;
+        return ClientType::system;
     default:
         // This shouldn't happen unless something wrong was done.
         throw std::logic_error("Unknown client type");
     }
 }
 
-std::optional<PortInfo::Direction> getPortDirection(
+std::optional<PortDirection> getPortDirection(
     const snd_seq_port_info_t* info)
 {
     int capability = snd_seq_port_info_get_capability(info);
     if (capability & SND_SEQ_PORT_CAP_DUPLEX)
-        return PortInfo::Direction::duplex;
+        return PortDirection::duplex;
     if (capability & SND_SEQ_PORT_CAP_READ)
-        return PortInfo::Direction::read;
+        return PortDirection::read;
     if (capability & SND_SEQ_PORT_CAP_WRITE)
-        return PortInfo::Direction::write;
+        return PortDirection::write;
     return {};
 }
 
-PortInfo::Type getPortType(const snd_seq_port_info_t* info)
+PortType getPortType(const snd_seq_port_info_t* info)
 {
     int type = snd_seq_port_info_get_type(info);
     if (type | SND_SEQ_PORT_TYPE_HARDWARE)
-        return PortInfo::Type::hardware;
-    return PortInfo::Type::software;
+        return PortType::hardware;
+    return PortType::software;
 }
 
 std::optional<PortInfo> getPortInfo(snd_seq_t* handle, int client, int port)
@@ -79,7 +79,7 @@ std::shared_ptr<void> makeClientId(snd_seq_client_info_t* info)
 struct HwPortInfo
 {
     std::string deviceId;
-    PortInfo::Direction direction;
+    PortDirection direction;
 };
 
 using PortNameToDeviceMap = std::map<std::string, HwPortInfo>;
@@ -123,11 +123,11 @@ static PortNameToDeviceMap getMidiDevices(snd_ctl_t* ctl, int card, int device)
 
         auto getDirection = [inSubdevices, outSubdevices](int index) {
             if (index < inSubdevices && index < outSubdevices)
-                return PortInfo::Direction::duplex;
+                return PortDirection::duplex;
             else if (index < inSubdevices)
-                return PortInfo::Direction::read;
+                return PortDirection::read;
             else
-                return PortInfo::Direction::write;
+                return PortDirection::write;
         };
 
         const bool hasSubdevice = i != 0 || subdeviceName[0] != '\0';
@@ -227,13 +227,13 @@ std::vector<ClientInfo> Engine::clientInfos()
 
             switch (portInfo->direction)
             {
-            case PortInfo::Direction::read:
+            case PortDirection::read:
                 clientInfo.outputs.push_back(*portInfo);
                 break;
-            case PortInfo::Direction::write:
+            case PortDirection::write:
                 clientInfo.inputs.push_back(*portInfo);
                 break;
-            case PortInfo::Direction::duplex:
+            case PortDirection::duplex:
                 clientInfo.outputs.push_back(*portInfo);
                 clientInfo.inputs.push_back(*portInfo);
                 break;

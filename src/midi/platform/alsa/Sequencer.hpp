@@ -40,8 +40,6 @@ public:
     const ClientInfo& info() const;
 
 private:
-    using SeqHandle = std::unique_ptr<snd_seq_t, int (*)(snd_seq_t*)>;
-
     class _Impl;
     std::unique_ptr<_Impl> _impl;
 
