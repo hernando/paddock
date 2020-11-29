@@ -4,6 +4,7 @@
 
 #include "core/errors.hpp"
 
+#include "platform/alsa/Engine.hpp"
 #include "platform/alsa/Sequencer.hpp"
 
 namespace paddock
@@ -76,29 +77,10 @@ private:
     T _engine;
 };
 
-namespace
-{
-#if PADDOCK_USE_ALSA
-class AlsaEngine
-{
-public:
-    Expected<alsa::Sequencer> openClient(const char* name)
-    {
-        return alsa::Sequencer::open(name);
-    }
-
-    std::vector<ClientInfo> clientInfos()
-    {
-        return {};
-    }
-};
-#endif
-} // namespace
-
 Expected<Engine> Engine::create()
 {
 #if PADDOCK_USE_ALSA
-    return Engine{Model{AlsaEngine{}}};
+    return Engine{Model{alsa::Engine{}}};
 #else
     return make_error_code(Error::NoEngineAvailable);
 #endif
@@ -117,6 +99,11 @@ Engine& Engine::operator=(Engine&& other) = default;
 Expected<Client> Engine::open(const char* name)
 {
     return _impl->openClient(name);
+}
+
+std::vector<ClientInfo> Engine::clientInfos() const
+{
+    return _impl->clientInfos();
 }
 
 } // namespace midi

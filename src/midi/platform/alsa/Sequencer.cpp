@@ -71,27 +71,21 @@ tl::expected<Sequencer, std::error_code> Sequencer::open(const char* clientName)
     };
 
     auto inPort =
-        createPort("raw:in",
+        createPort("paddock:in",
                    SND_SEQ_PORT_CAP_WRITE | SND_SEQ_PORT_CAP_SUBS_WRITE,
                    SND_SEQ_PORT_TYPE_APPLICATION);
 
     auto outPort =
-        createPort("cooked:out",
+        createPort("paddock:out",
                    SND_SEQ_PORT_CAP_READ | SND_SEQ_PORT_CAP_SUBS_READ,
                    SND_SEQ_PORT_TYPE_PORT);
 
-    auto controlPort =
-        createPort("control:out",
-                   SND_SEQ_PORT_CAP_READ | SND_SEQ_PORT_CAP_SUBS_READ,
-                   SND_SEQ_PORT_TYPE_PORT);
-
-    if (!inPort || !outPort || !controlPort)
+    if (!inPort || !outPort)
         return tl::unexpected(make_error_code(Error::PortCreationFailed));
 
     ClientInfo info{.name = clientName,
                     .inputs = {PortInfo{std::move(*inPort)}},
-                    .outputs = {PortInfo{std::move(*outPort)},
-                               PortInfo{std::move(*controlPort)}}};
+                    .outputs = {PortInfo{std::move(*outPort)}}};
 
     return Sequencer(
         std::make_unique<_Impl>(std::move(seqHandle), std::move(info)));

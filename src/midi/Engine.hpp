@@ -38,7 +38,7 @@ public:
     Expected<Client> open(const char* name);
 
     // Get the infomation about all the clients in the system
-    std::vector<ClientInfo> clientInfos();
+    std::vector<ClientInfo> clientInfos() const;
 
 private:
     std::unique_ptr<AbstractEngine> _impl;
