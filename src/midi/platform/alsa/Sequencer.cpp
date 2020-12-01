@@ -1,5 +1,6 @@
 #include "Sequencer.hpp"
 
+#include "core/Poller.hpp"
 #include "core/errors.hpp"
 
 #include <alsa/asoundlib.h>
@@ -14,8 +15,6 @@ namespace alsa
 {
 namespace
 {
-constexpr int _pollTimeOut = 100; // Milliseconds
-
 class AlsaSeqErrorCategory : public std::error_category
 {
     const char* name() const noexcept override { return "alsa-seq-error"; }
@@ -37,7 +36,7 @@ class AlsaSeqErrorCategory : public std::error_category
     bool equivalent(int code, const std::error_condition& condition) const
         noexcept override
     {
-        return (condition == core::ErrorType::MidiError);
+        return (condition == core::ErrorType::midi);
     }
 };
 
@@ -102,8 +101,6 @@ public:
     _Impl(SeqHandle handle_, ClientInfo info)
         : handle{std::move(handle_)}
         , clientInfo(std::move(info))
-        , _isRunning{true}
-        , _thread{[this] { _runEventFilter(); }}
     {
         snd_seq_addr_t sender, dest;
         snd_seq_port_subscribe_t* subs;
@@ -120,42 +117,41 @@ public:
         snd_seq_subscribe_port(handle.get(), subs);
 
         snd_seq_connect_to(handle.get(), clientInfo.outputs[1].number, 24, 1);
+
+        auto callback = [this](const void*, int) {
+            do
+            {
+                snd_seq_event_t* event;
+                snd_seq_event_input(handle.get(), &event);
+                _processEvent(event);
+            } while (snd_seq_event_input_pending(handle.get(), 0) > 0);
+        };
+
+        std::vector<pollfd> fds;
+        fds.resize(snd_seq_poll_descriptors_count(handle.get(), POLLIN));
+        snd_seq_poll_descriptors(handle.get(), fds.data(), fds.size(), POLLIN);
+
+        for (auto& fd : fds)
+            _descriptors.push_back(core::PollDescriptor{
+                callback, std::shared_ptr<void>(new pollfd{fd})});
+
+        for (const auto& descriptor : _descriptors)
+            _poller.add(descriptor);
     }
 
     ~_Impl()
     {
-        _isRunning = false;
-        _thread.join();
+        for (const auto& descriptor : _descriptors)
+            _poller.remove(descriptor);
         for (const auto& port : clientInfo.inputs)
             snd_seq_delete_port(handle.get(), port.number);
         for (const auto& port : clientInfo.outputs)
             snd_seq_delete_port(handle.get(), port.number);
-        handle.reset();
     }
 
 private:
-    std::atomic_bool _isRunning{false};
-    std::thread _thread;
-
-    void _runEventFilter()
-    {
-        std::vector<pollfd> fds;
-        fds.resize(snd_seq_poll_descriptors_count(handle.get(), POLLIN));
-
-        snd_seq_poll_descriptors(handle.get(), fds.data(), fds.size(), POLLIN);
-        while (_isRunning)
-        {
-            if (poll(fds.data(), fds.size(), _pollTimeOut) > 0)
-            {
-                do
-                {
-                    snd_seq_event_t* event;
-                    snd_seq_event_input(handle.get(), &event);
-                    _processEvent(event);
-                } while (snd_seq_event_input_pending(handle.get(), 0) > 0);
-            }
-        }
-    }
+    std::vector<core::PollDescriptor> _descriptors;
+    core::Poller _poller;
 
     void _processEvent(snd_seq_event_t* event)
     {

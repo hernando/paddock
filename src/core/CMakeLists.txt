@@ -5,15 +5,21 @@ target_sources(paddock_core
   PUBLIC
     Globals.hpp
     Log.hpp
-    Program.cpp
+    Poller.hpp
+    Program.hpp
     errors.hpp
     resources.hpp
   PRIVATE
     Globals.cpp
     Log.cpp
+    Poller.cpp
     Program.cpp
     errors.cpp
     resources.cpp
+
+    platform/poll.hpp
+    platform/poll.cpp
+    platform/posix/poll.hpp
 )
 
 target_link_libraries(paddock_core

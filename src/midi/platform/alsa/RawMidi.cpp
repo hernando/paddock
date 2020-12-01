@@ -13,7 +13,10 @@ namespace
 {
 class RawMidiErrorCategory : public std::error_category
 {
-    const char* name() const noexcept override { return "alsa-rawmidi-error"; }
+    const char* name() const noexcept override
+    {
+        return "paddock-alsa-rawmidi-error";
+    }
     std::string message(int code) const override
     {
         using Error = RawMidi::Error;
@@ -30,7 +33,7 @@ class RawMidiErrorCategory : public std::error_category
     bool equivalent(int code, const std::error_condition& condition) const
         noexcept override
     {
-        return (condition == core::ErrorType::MidiError);
+        return (condition == core::ErrorType::midi);
     }
 };
 

@@ -22,6 +22,7 @@ target_sources(paddock_midi
 )
 
 target_link_libraries(paddock_midi PRIVATE
+  paddock::core
   paddock::utils
   Threads::Threads
 )

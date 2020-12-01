@@ -34,7 +34,10 @@ enum NsmProtocolErrors
 
 class NsmSessionErrorCategory : public std::error_category
 {
-    const char* name() const noexcept override { return "nsm-session-error"; }
+    const char* name() const noexcept override
+    {
+        return "paddock-nsm-session-error";
+    }
     std::string message(int code) const override
     {
         switch (static_cast<NsmSession::Error>(code))
@@ -52,7 +55,7 @@ class NsmSessionErrorCategory : public std::error_category
     bool equivalent(int code, const std::error_condition& condition) const
         noexcept override
     {
-        return (condition == ErrorType::NsmSessionError);
+        return (condition == ErrorType::nsmSession);
     }
 };
 

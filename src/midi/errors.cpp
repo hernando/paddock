@@ -32,7 +32,7 @@ class DeviceErrorCategory : public std::error_category
     bool equivalent(int code, const std::error_condition& condition) const
         noexcept override
     {
-        return (condition == core::ErrorType::MidiError);
+        return (condition == core::ErrorType::midi);
     }
 };
 
@@ -40,7 +40,10 @@ const DeviceErrorCategory deviceErrorCategory{};
 
 class MidiEngineErrorCategory : public std::error_category
 {
-    const char* name() const noexcept override { return "midi-engine-error"; }
+    const char* name() const noexcept override
+    {
+        return "paddock-midi-engine-error";
+    }
     std::string message(int code) const override
     {
         using Error = EngineError;
@@ -55,7 +58,7 @@ class MidiEngineErrorCategory : public std::error_category
     bool equivalent(int code, const std::error_condition& condition) const
         noexcept override
     {
-        return (condition == core::ErrorType::MidiError);
+        return (condition == core::ErrorType::midi);
     }
 };
 
