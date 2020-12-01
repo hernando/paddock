@@ -7,6 +7,7 @@ target_sources(paddock_midi
     Device.hpp
     Engine.hpp
     Events.hpp
+    errors.hpp
 
     pads/KorgPadKontrol.hpp
 
@@ -15,6 +16,7 @@ target_sources(paddock_midi
     ClientPrivate.hpp
     Device.cpp
     Engine.cpp
+    errors.cpp
 
     pads/KorgPadKontrol.cpp
 )
@@ -28,6 +30,8 @@ if(PADDOCK_USE_ALSA)
   target_sources(paddock_midi PRIVATE
     platform/alsa/Engine.hpp
     platform/alsa/Engine.cpp
+    platform/alsa/RawMidi.hpp
+    platform/alsa/RawMidi.cpp
     platform/alsa/Sequencer.hpp
     platform/alsa/Sequencer.cpp
   )

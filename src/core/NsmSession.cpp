@@ -39,11 +39,11 @@ class NsmSessionErrorCategory : public std::error_category
     {
         switch (static_cast<NsmSession::Error>(code))
         {
-        case NsmSession::Error::CouldNotStartLoServer:
+        case NsmSession::Error::couldNotStartLoServer:
             return "OSC server could not be started";
-        case NsmSession::Error::FailedToAnnounceToServer:
+        case NsmSession::Error::failedToAnnounceToServer:
             return "Failed to announce to NSM server";
-        case NsmSession::Error::InvalidServerAddress:
+        case NsmSession::Error::invalidServerAddress:
             return "Invalid NSM server address";
         default:
             throw std::logic_error("Unknown error code");
@@ -99,11 +99,11 @@ public:
             std::unique_ptr<_Impl>(new _Impl(nsmUrl, std::move(callbacks)));
         if (!impl->nsm.is_valid())
         {
-            return tl::make_unexpected(Error::InvalidServerAddress);
+            return tl::make_unexpected(Error::invalidServerAddress);
         }
         if (!impl->server.is_valid())
         {
-            return tl::make_unexpected(Error::CouldNotStartLoServer);
+            return tl::make_unexpected(Error::couldNotStartLoServer);
         }
 
         impl->server.start();

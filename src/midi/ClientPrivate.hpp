@@ -23,7 +23,7 @@ public:
     {
     }
 
-    virtual const ClientInfo& info() const
+    const ClientInfo& info() const final
     {
         return _client.info();
     }

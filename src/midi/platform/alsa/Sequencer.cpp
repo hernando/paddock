@@ -43,13 +43,13 @@ class AlsaSeqErrorCategory : public std::error_category
 
 const AlsaSeqErrorCategory alsaSeqErrorCategory{};
 
+using SeqHandle = std::unique_ptr<snd_seq_t, int (*)(snd_seq_t*)>;
+} // namespace
+
 std::error_code make_error_code(Sequencer::Error error)
 {
     return std::error_code{static_cast<int>(error), alsaSeqErrorCategory};
 }
-
-using SeqHandle = std::unique_ptr<snd_seq_t, int (*)(snd_seq_t*)>;
-} // namespace
 
 tl::expected<Sequencer, std::error_code> Sequencer::open(const char* clientName)
 {
@@ -57,12 +57,12 @@ tl::expected<Sequencer, std::error_code> Sequencer::open(const char* clientName)
 
     snd_seq_t* handle;
     if (snd_seq_open(&handle, "default", SND_SEQ_OPEN_DUPLEX, 0) == -1)
-        return tl::unexpected(make_error_code(Error::OpenSequencerFailed));
+        return tl::make_unexpected(Error::OpenSequencerFailed);
 
     SeqHandle seqHandle(handle, snd_seq_close);
 
     if (snd_seq_set_client_name(handle, clientName) == -1)
-        return tl::unexpected(make_error_code(Error::SetClientNameFailed));
+        return tl::make_unexpected(Error::SetClientNameFailed);
 
     const auto createPort = [handle](const char* name, int capabilities,
                                      int type) -> std::optional<PortInfo> {

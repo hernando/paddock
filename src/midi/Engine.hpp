@@ -10,18 +10,14 @@ namespace paddock
 {
 namespace midi
 {
-
 class AbstractEngine;
 class ClientInfo;
 
 class Engine
 {
 public:
-    enum class Error
-    {
-        NoEngineAvailable = 1
-    };
-    template <typename T> class Model;
+    template <typename T>
+    class Model;
 
     static Expected<Engine> create();
 

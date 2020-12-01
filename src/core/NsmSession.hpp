@@ -16,9 +16,9 @@ class NsmSession
 public:
     enum class Error
     {
-        CouldNotStartLoServer = 1,
-        InvalidServerAddress,
-        FailedToAnnounceToServer // Unused
+        couldNotStartLoServer = 1,
+        invalidServerAddress,
+        failedToAnnounceToServer // Unused
     };
 
     struct Callbacks

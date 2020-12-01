@@ -1,47 +1,17 @@
 #include "Engine.hpp"
 
 #include "ClientPrivate.hpp"
-
-#include "core/errors.hpp"
+#include "errors.hpp"
 
 #include "platform/alsa/Engine.hpp"
 #include "platform/alsa/Sequencer.hpp"
+
+#include <thread>
 
 namespace paddock
 {
 namespace midi
 {
-namespace
-{
-class MidiEngineErrorCategory : public std::error_category
-{
-    const char* name() const noexcept override { return "midi-engine-error"; }
-    std::string message(int code) const override
-    {
-        using Error = Engine::Error;
-        switch (static_cast<Error>(code))
-        {
-        case Error::NoEngineAvailable:
-            return "No MIDI engine available";
-        default:
-            throw std::logic_error("Unknown error code");
-        }
-    }
-    bool equivalent(int code, const std::error_condition& condition) const
-        noexcept override
-    {
-        return (condition == core::ErrorType::MidiError);
-    }
-};
-
-const MidiEngineErrorCategory midiEngineErrorCategory{};
-} // namespace
-
-std::error_code make_error_code(Engine::Error error)
-{
-    return std::error_code{static_cast<int>(error), midiEngineErrorCategory};
-}
-
 class AbstractEngine
 {
 public:
@@ -59,12 +29,12 @@ public:
     {
     }
 
-    virtual std::vector<ClientInfo> clientInfos()
+    std::vector<ClientInfo> clientInfos() final
     {
         return _engine.clientInfos();
     }
 
-    virtual Expected<Client> openClient(const char* name)
+    Expected<Client> openClient(const char* name) final
     {
         auto client = _engine.openClient(name);
         if (!client)
@@ -82,7 +52,7 @@ Expected<Engine> Engine::create()
 #if PADDOCK_USE_ALSA
     return Engine{Model{alsa::Engine{}}};
 #else
-    return make_error_code(Error::NoEngineAvailable);
+    return make_error_code(Error::noEngineAvailable);
 #endif
 }
 
