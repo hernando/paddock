@@ -19,20 +19,21 @@ namespace paddock
 #ifndef PADDOCK_USE_LIBLO
 namespace core
 {
-class NsmSession
+struct NsmSession
 {
-    class Callbacks
+    struct Callbacks
     {
-        void* activeCallback;
-        void* openCallback;
-        void* saveCallback;
+        template <typename... Ts>
+        Callbacks(Ts...)
+        {
+        }
     };
 
     void setDirty(bool) {}
 };
 } // namespace core
-}
-std::optional<core::NsmSession> tryStartNsmSession(NsmSession::Callbacks)
+
+std::optional<core::NsmSession> tryStartNsmSession(core::NsmSession::Callbacks)
 {
     return std::nullopt;
 }
@@ -79,9 +80,10 @@ public:
                          const std::string& clientId)
     {
         if (auto ret = execInMainThread([&] {
-                    openProgram(projectPath + "/program.pad");
-                    _name = clientId;
-                }); !ret)
+                openProgram(projectPath + "/program.pad");
+                _name = clientId;
+            });
+            !ret)
         {
             return ret.error();
         }
@@ -112,7 +114,7 @@ public:
         if (_program)
             _program->deleteLater();
 
-        _program  = program;
+        _program = program;
 
         connect(_program, &core::Program::dirtyChanged,
                 [this]() { this->sendDirty(_program->dirty()); });
