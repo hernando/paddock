@@ -1,5 +1,6 @@
 #include "KorgPadKontrol.hpp"
 
+#include "korgPadKontrol/Scene.hpp"
 #include "korgPadKontrol/sysex.hpp"
 
 #include "midi/Client.hpp"
@@ -15,6 +16,8 @@
 #include "utils/overloaded.hpp"
 
 #include <cassert>
+#include <mutex>
+
 #include <iostream>
 
 #define ECHO
@@ -27,6 +30,7 @@ namespace sysex
 {
 using namespace korgPadKontrol::sysex;
 }
+using korgPadKontrol::Scene;
 
 namespace
 {
@@ -40,6 +44,8 @@ class PadKontrolErrorCategory : public std::error_category
         {
         case Error::unrecognizedDevice:
             return "Device not recognized as KORG PadKontrol";
+        case Error::packetCommunicationError:
+            return "Packet Communication Command Error";
         default:
             throw std::logic_error("Unknown error code");
         }
@@ -53,26 +59,158 @@ class PadKontrolErrorCategory : public std::error_category
 
 const PadKontrolErrorCategory padKontrolErrorCategory{};
 
-using RequestResult = Expected<std::vector<std::byte>>;
-
-struct IdentityRequest
+struct GlobalDataDumpRequest
 {
-    std::promise<RequestResult> promise;
+    static constexpr auto& hostMessage = sysex::globalDataDumpReq;
+
+    using Reply = Expected<std::vector<std::byte>>;
+    std::promise<Reply> promise;
 
     bool handle(std::span<const std::byte> payload)
     {
-        if (payload.size() == 13 && payload[0] == 0x7E_b &&
-            payload[2] == 0x06_b && payload[3] == 0x02_b)
+        if (payload[4] != sysex::DATA_DUMP &&
+            payload[6] != sysex::GLOBAL_DATA_DUMP)
         {
-            promise.set_value(
-                std::vector<std::byte>(payload.begin(), payload.end()));
-            return true;
+            return false;
         }
-        return false;
+        promise.set_value(
+            std::vector<std::byte>(payload.begin(), payload.end()));
+        return true;
     }
 };
 
-using PendingRequest = std::variant<IdentityRequest>;
+struct CurrentSceneDataDumpRequest
+{
+    static constexpr auto& hostMessage = sysex::currentSceneDataDumpReq;
+
+    using Reply = Expected<Scene>;
+    std::promise<Reply> promise;
+
+    bool handle(std::span<const std::byte> payload)
+    {
+        if (payload[4] != sysex::DATA_DUMP && payload[5] != 0x7F_b &&
+            payload[6] != 0x02_b && payload[7] != 0x0A_b &&
+            payload[8] != 0x02_b && payload[9] != sysex::CURRENT_SCENE_DUMP)
+        {
+            return false;
+        }
+        promise.set_value(
+            korgPadKontrol::decodeScene({payload.begin() + 10, payload.end()}));
+        return true;
+    }
+};
+
+struct IdentityRequest
+{
+    static constexpr auto& hostMessage = sysex::inquiryMessageRequest;
+
+    using Reply = Expected<std::vector<std::byte>>;
+    std::promise<Reply> promise;
+
+    bool handle(std::span<const std::byte> payload)
+    {
+        if (payload.size() != 13 || payload[0] != sysex::NON_REALTIME_MESSAGE ||
+            payload[2] != sysex::GENERAL_INFORMATION ||
+            payload[3] != sysex::IDENTITY)
+        {
+            return false;
+        }
+        promise.set_value(
+            std::vector<std::byte>(payload.begin(), payload.end()));
+        return true;
+    }
+};
+
+template <bool on>
+struct NativeModeRequest
+{
+    static constexpr auto& hostMessage =
+        on ? sysex::nativeModeOnReq : sysex::nativeModeOffReq;
+
+    using Reply = Expected<bool>;
+    std::promise<Reply> promise;
+
+    bool handle(std::span<const std::byte> payload)
+    {
+        // The structure of the reply is
+        // [0xF0], 0x42, 0x4g, 0x6E, 0x08, PACKET_COMM, type, reply, [0xF7]
+        if (payload.size() != 7 || payload[4] != sysex::NATIVE_MODE)
+        {
+            return false;
+        }
+        // 2 = Out, 3 = In
+        promise.set_value(payload[6] == (on ? 0x03_b : 0x02_b));
+        return true;
+    }
+};
+
+struct PacketCommunicationCmd
+{
+    std::vector<std::byte> hostMessage;
+
+    using Reply = Expected<bool>;
+    std::promise<Reply> promise;
+
+    explicit PacketCommunicationCmd(std::span<const std::byte> message)
+        : hostMessage(message.begin(), message.end())
+    {
+    }
+
+    bool handle(std::span<const std::byte> payload)
+    {
+        // The structure of the reply is
+        // [0xF0], 0x42, 0x4g, 0x6E, 0x08, PACKET_COMM, type, reply, [0xF7]
+        if (payload.size() != 7 || payload[4] != sysex::PACKET_COMM ||
+            payload[5] != hostMessage[7])
+        {
+            return false;
+        }
+        promise.set_value(payload[6] == 0x00_b); // 0 = OK
+        return true;
+    }
+};
+
+
+struct ResetDefaultScene
+{
+    static constexpr auto& hostMessage = sysex::resetDefaultScene;
+
+    using Reply = Expected<bool>;
+    std::promise<Reply> promise;
+
+    bool handle(std::span<const std::byte> payload)
+    {
+        // The structure of the reply is
+        // [0xF0], 0x42, 0x4g, 0x6E, 0x08, PACKET_COMM, type, reply, [0xF7]
+        if (payload.size() != 7 || payload[4] != sysex::PACKET_COMM ||
+            (payload[5] != sysex::DATA_LOAD_COMPLETED &&
+             payload[5] != sysex::DATA_LOAD_ERROR))
+        {
+            return false;
+        }
+        promise.set_value(payload[5] == sysex::DATA_LOAD_COMPLETED);
+        return true;
+    }
+};
+
+using CommandReply =
+    std::variant<CurrentSceneDataDumpRequest, GlobalDataDumpRequest,
+                 IdentityRequest, NativeModeRequest<true>,
+                 NativeModeRequest<false>, PacketCommunicationCmd,
+                 ResetDefaultScene>;
+
+std::error_code check(std::future<Expected<bool>>&& future)
+{
+    auto result = future.get();
+    if (!result)
+        return result.error();
+    if (!*result)
+        return KorgPadKontrol::Error::packetCommunicationError;
+    return std::error_code{};
+}
+#define POST_AND_CHECK(cmd)                    \
+    if (auto error = check(_postCommand(cmd))) \
+        return error;
 
 } // namespace
 
@@ -119,17 +257,7 @@ public:
                                                         : PortDirection::write);
 
         if (!device)
-        {
             return device.error();
-        }
-        device->write(sysex::nativeModeOff);
-        if (mode == Mode::native)
-        {
-            device->write(sysex::nativeModeOn);
-            device->write(sysex::nativeModeInit);
-            device->write(sysex::nativeEnableOutput);
-            device->write(sysex::nativeModeTest);
-        }
 
         auto client =
             _engine->open(_midiClientName, mode == Mode::native
@@ -156,6 +284,21 @@ public:
 
         _mode = mode;
 
+        if (mode == Mode::native)
+        {
+            POST_AND_CHECK(NativeModeRequest<false>{});
+            POST_AND_CHECK(NativeModeRequest<true>{});
+            POST_AND_CHECK(PacketCommunicationCmd{sysex::nativeEnableOutput})
+            POST_AND_CHECK(PacketCommunicationCmd{sysex::nativeModeInit})
+
+            _device->write(sysex::nativeModeTest);
+        }
+        else
+        {
+            POST_AND_CHECK(NativeModeRequest<false>{});
+            POST_AND_CHECK(ResetDefaultScene{});
+        }
+
         return _handShake();
     }
 
@@ -170,7 +313,8 @@ private:
 
     SysExStreamTokenizer<sysex::maxMessageSize> _tokenizer;
 
-    std::vector<PendingRequest> _pendingRequests;
+    std::mutex _pendingReplyMutex;
+    std::vector<CommandReply> _pendingReplies;
 
     void _deviceInEvent()
     {
@@ -179,7 +323,7 @@ private:
             [this](std::span<const std::byte> payload) {
                 _decodeMessage(payload);
             },
-            [this]() { _cancelPendingRequests(); });
+            [this]() { _cancelPendingCommands(); });
     }
 
     void _decodeMessage(std::span<const std::byte> payload)
@@ -193,16 +337,17 @@ private:
         printf("\n");
 #endif
 
-        _pendingRequests.erase(
-            std::remove_if(_pendingRequests.begin(), _pendingRequests.end(),
-                           [payload](PendingRequest& request) {
+        std::lock_guard<std::mutex> lock(_pendingReplyMutex);
+        _pendingReplies.erase(
+            std::remove_if(_pendingReplies.begin(), _pendingReplies.end(),
+                           [payload](CommandReply& reply) {
                                return std::visit(
-                                   [payload](auto&& request) {
-                                       return request.handle(payload);
+                                   [payload](auto&& reply) {
+                                       return reply.handle(payload);
                                    },
-                                   request);
+                                   reply);
                            }),
-            _pendingRequests.end());
+            _pendingReplies.end());
     }
 
     void _clientInEvent()
@@ -212,6 +357,7 @@ private:
             const auto event = _client->readEvent();
             if (!event)
             {
+                core::log() << event.error().message();
                 return;
             }
 
@@ -264,11 +410,7 @@ private:
 
     std::error_code _handShake()
     {
-        auto reply = _postRequest(IdentityRequest{});
-        if (auto result = _device->write(sysex::inquiryMessageRequest); !result)
-        {
-            return result.error();
-        }
+        auto reply = _postCommand(IdentityRequest{});
 
         auto message = reply.get();
         if (!message)
@@ -280,28 +422,44 @@ private:
         return std::error_code{};
     }
 
-    template <typename Request>
-    std::future<RequestResult> _postRequest(Request&& request)
+    template <typename T>
+    std::future<typename T::Reply> _postCommand(T&& inCommand)
     {
-        _pendingRequests.emplace_back(std::forward<Request>(request));
-        return std::visit(
-            [](auto&& request) { return request.promise.get_future(); },
-            _pendingRequests.back());
+        using Command = std::decay_t<decltype(inCommand)>;
+
+        Command& command = [this](auto&& command) -> Command& {
+            std::lock_guard<std::mutex> lock(_pendingReplyMutex);
+            _pendingReplies.push_back(std::forward<Command>(command));
+            return std::get<Command>(_pendingReplies.back());
+        }(std::forward<T>(inCommand));
+
+        auto future = command.promise.get_future();
+
+        if (auto result = _device->write(command.hostMessage); !result)
+        {
+            command.promise.set_value(tl::make_unexpected(result.error()));
+
+            std::lock_guard<std::mutex> lock(_pendingReplyMutex);
+            _pendingReplies.pop_back();
+        }
+
+        return future;
     }
 
-    void _cancelPendingRequests()
+    void _cancelPendingCommands()
     {
-        // Cancel all pending requests
-        for (auto& request : _pendingRequests)
+        std::lock_guard<std::mutex> lock(_pendingReplyMutex);
+        // Cancel all pending commands
+        for (auto& command : _pendingReplies)
         {
             std::visit(
-                [](auto&& request) {
-                    request.promise.set_value(
+                [](auto&& command) {
+                    command.promise.set_value(
                         tl::make_unexpected(DeviceError::streamReadError));
                 },
-                request);
+                command);
         }
-        _pendingRequests.clear();
+        _pendingReplies.clear();
     }
 };
 

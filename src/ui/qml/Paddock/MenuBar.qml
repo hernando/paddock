@@ -28,6 +28,21 @@ QQC.MenuBar {
         QQC.Action { text: qsTr("&Close") }
         QQC.Action { text: qsTr("&Quit") }
     }
+
+    QQC.Menu {
+        title: qsTr("&Controller")
+        QQC.Action {
+            enabled: session.controller !== undefined && session.controller.isNative
+            text: qsTr("&Set normal mode")
+            onTriggered: session.controller.setNormalMode()
+        }
+        QQC.Action {
+            enabled: session.controller !== undefined && !session.controller.isNative
+            text: qsTr("&Set native mode")
+            onTriggered: session.controller.setNativeMode()
+        }
+    }
+
     QQC.Menu {
         title: qsTr("&Help")
         QQC.Action { text: qsTr("&About") }

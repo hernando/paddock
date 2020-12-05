@@ -32,7 +32,7 @@ events::Event makeEvent(const snd_seq_event_t* event, const snd_seq_t* handle)
         return events::Note{.channel = event->data.note.channel,
                             .note = event->data.note.note,
                             .velocity = event->data.note.velocity,
-                            .duration = static_cast<events::UValue14bit>(
+                            .duration = static_cast<UValue14bit>(
                                 event->data.note.duration),
                             .offVelocity = event->data.note.off_velocity};
 
@@ -54,36 +54,33 @@ events::Event makeEvent(const snd_seq_event_t* event, const snd_seq_t* handle)
     case SND_SEQ_EVENT_CONTROLLER:
         return events::Controller{
             .channel = event->data.control.channel,
-            .value = static_cast<events::Value7bit>(event->data.control.value),
-            .parameter =
-                static_cast<events::Value7bit>(event->data.control.param)};
+            .value = static_cast<Value7bit>(event->data.control.value),
+            .parameter = static_cast<Value7bit>(event->data.control.param)};
 
     case SND_SEQ_EVENT_CONTROL14:
         return events::Controller14{
             .channel = event->data.control.channel,
-            .value = static_cast<events::Value14bit>(event->data.control.value),
+            .value = static_cast<Value14bit>(event->data.control.value),
 
-            .parameter =
-                static_cast<events::Value7bit>(event->data.control.param)};
+            .parameter = static_cast<Value7bit>(event->data.control.param)};
     case SND_SEQ_EVENT_PGMCHANGE:
         return events::ProgramChange{
             .channel = event->data.control.channel,
-            .program = static_cast<events::Value7bit>(event->data.control.value)
+            .program = static_cast<Value7bit>(event->data.control.value)
 
         };
 
     case SND_SEQ_EVENT_CHANPRESS:
         return events::ChannelPressure{
             .channel = event->data.control.channel,
-            .pressure =
-                static_cast<events::Value7bit>(event->data.control.value)
+            .pressure = static_cast<Value7bit>(event->data.control.value)
 
         };
 
     case SND_SEQ_EVENT_PITCHBEND:
         return events::PitchBend{
             .channel = event->data.control.channel,
-            .value = static_cast<events::Value14bit>(event->data.control.value)
+            .value = static_cast<Value14bit>(event->data.control.value)
 
         };
 

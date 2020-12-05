@@ -6,11 +6,7 @@ import Paddock.Pads 1.0
 Item {
     id: root
 
-    enum Model {
-        KorgPadKontrol
-    }
-
-    property int model: -1
+    property var device: undefined
 
     Loader {
         anchors.fill: parent
@@ -18,14 +14,27 @@ Item {
         Component {
             id: korgPadKontrol
             KorgPadKontrol {
+                device: root.device
+            }
+        }
+        Component {
+            id: noDevice
+            Item {
+                Text {
+                    anchors.centerIn: parent
+                    text: "No supported device connected"
+                }
             }
         }
 
         sourceComponent: {
-            switch (root.model) {
-            case ControllerLayout.Model.KorgPadKontrol: return korgPadKontrol
+            if (root.device === undefined) {
+                return noDevice
             }
-            return undefined
+            switch (device.model) {
+            case ControllerModel.KorgPadKontrol: return korgPadKontrol
+            }
+            return noDevice
         }
     }
 }

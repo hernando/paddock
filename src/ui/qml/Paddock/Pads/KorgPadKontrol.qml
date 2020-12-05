@@ -1,3 +1,8 @@
-import Paddock.Pads.KorgPadKontrol 1.0
+import Paddock.Pads.KorgPadKontrol 1.0 as PadUi
+import Paddock 1.0
 
-Controller {}
+PadUi.Controller {
+    property KorgPadKontrol device: null
+
+    enabled: device === undefined
+}

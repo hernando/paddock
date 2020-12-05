@@ -19,6 +19,8 @@ target_sources(paddock_midi
     errors.cpp
 
     pads/KorgPadKontrol.cpp
+    pads/korgPadKontrol/Scene.hpp
+    pads/korgPadKontrol/Scene.cpp
     pads/korgPadKontrol/sysex.hpp
 )
 

@@ -17,7 +17,8 @@ public:
     friend class Engine;
 
     enum class Error {
-        unrecognizedDevice = 1
+        unrecognizedDevice = 1,
+        packetCommunicationError,
     };
 
     enum class Mode {native, normal};

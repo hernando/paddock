@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QObject>
+#include <QVariant>
 
 #include <memory>
 #include <system_error>
@@ -12,10 +13,17 @@ namespace core
 class Program;
 }
 
+namespace midi
+{
+class Engine;
+}
+
 class Session : public QObject
 {
     Q_OBJECT
 
+    Q_PROPERTY(
+        QVariant controller READ controller NOTIFY controllerChanged)
     Q_PROPERTY(
         paddock::core::Program* program READ program NOTIFY programChanged)
 
@@ -25,7 +33,11 @@ public:
     Session();
     ~Session();
 
+    std::error_code init();
+
     core::Program* program() const;
+
+    QVariant controller();
 
     bool isNsmSession() const;
 
@@ -34,8 +46,10 @@ public:
 
     std::error_code openProgram(const std::string& filePath);
 
+
 signals:
     void programChanged();
+    void controllerChanged();
 
 private:
     class _Impl;

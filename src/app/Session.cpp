@@ -1,8 +1,13 @@
+#include "paddock/defines.h"
+
 #include "Session.hpp"
+
+#include "pads/pads.hpp"
 
 #include "utils.hpp"
 
-#include "paddock/defines.h"
+#include "midi/Engine.hpp"
+#include "midi/pads/KorgPadKontrol.hpp"
 
 #include "core/Log.hpp"
 #include "core/Program.hpp"
@@ -71,6 +76,13 @@ public:
             [this]() { return this->save(); }});
     }
 
+    ~_Impl()
+    {
+        // We need to ensure the controller is destroyed before the engine.
+        if (_padController)
+            std::visit([](auto controller) { delete controller; }, *_padController);
+    }
+
     bool hasSession() const { return _nsmSession.has_value(); }
 
     const std::string& name() const { return _name; }
@@ -102,6 +114,33 @@ public:
             _nsmSession->setDirty(dirty);
     }
 
+    std::error_code initMidi()
+    {
+        auto engine = paddock::midi::Engine::create();
+        if (!engine)
+            return engine.error();
+
+        _midiEngine = std::move(*engine);
+
+        // TODO: Implement Client/Port detection changes
+        auto controller = makePad(_parent, &*_midiEngine, name());
+        _padController = controller ? std::make_optional(std::move(*controller))
+                                    : std::nullopt;
+
+        emit _parent->controllerChanged();
+
+        return std::error_code{};
+    }
+
+    QVariant controller()
+    {
+        if (!_padController)
+            return {};
+        return std::visit(
+            [](auto controller) { return QVariant::fromValue(controller); },
+            *_padController);
+    }
+
     std::error_code openProgram(std::string filePath)
     {
         auto program = new core::Program(_parent);
@@ -128,6 +167,9 @@ public:
 private:
     Session* _parent;
 
+    std::optional<midi::Engine> _midiEngine;
+    std::optional<Pad> _padController;
+
     core::Program* _program{nullptr};
     std::string _filePath;
     std::optional<core::NsmSession> _nsmSession;
@@ -140,6 +182,11 @@ Session::Session()
 }
 
 Session::~Session() = default;
+
+std::error_code Session::init()
+{
+    return _impl->initMidi();
+}
 
 core::Program* Session::program() const
 {
@@ -154,6 +201,11 @@ bool Session::isNsmSession() const
 const std::string& Session::name() const
 {
     return _impl->name();
+}
+
+QVariant Session::controller()
+{
+    return _impl->controller();
 }
 
 std::error_code Session::openProgram(const std::string& filePath)

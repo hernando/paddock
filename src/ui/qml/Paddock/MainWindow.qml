@@ -18,7 +18,7 @@ ApplicationWindow {
     }
 
     ControllerLayout {
-        model: ControllerLayout.Model.KorgPadKontrol
+        device: session.controller
         anchors.fill: parent
     }
 

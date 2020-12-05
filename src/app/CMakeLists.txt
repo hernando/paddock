@@ -7,6 +7,12 @@ target_sources(paddock PRIVATE
   resources.cpp
   utils.hpp
 
+  pads/KorgPadKontrol.hpp
+  pads/KorgPadKontrol.cpp
+  pads/models.hpp
+  pads/pads.hpp
+  pads/pads.cpp
+
   main.cpp
 )
 

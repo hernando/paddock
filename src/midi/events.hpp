@@ -1,5 +1,7 @@
 #pragma once
 
+#include "types.hpp"
+
 #include "utils/mp.hpp"
 
 #include <cstdint>
@@ -13,10 +15,6 @@ namespace midi
 namespace events
 {
 // Voice events
-
-using Value7bit = unsigned char;
-using Value14bit = short;
-using UValue14bit = unsigned short;
 
 struct Note
 {
