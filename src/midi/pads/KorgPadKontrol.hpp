@@ -30,8 +30,8 @@ public:
 
     ~KorgPadKontrol();
 
-    KorgPadKontrol(KorgPadKontrol&& other);
-    KorgPadKontrol& operator=(KorgPadKontrol&& other);
+    KorgPadKontrol(KorgPadKontrol&& other) noexcept;
+    KorgPadKontrol& operator=(KorgPadKontrol&& other) noexcept;
 
     KorgPadKontrol(const KorgPadKontrol& other) = delete;
     KorgPadKontrol& operator=(const KorgPadKontrol& other) = delete;

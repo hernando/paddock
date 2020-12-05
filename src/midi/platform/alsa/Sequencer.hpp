@@ -61,8 +61,6 @@ private:
     std::shared_ptr<void> _inPollHandle;
     std::shared_ptr<void> _outPollHandle;
 
-    bool _hasEvents{false};
-
     Sequencer(Handle handle, ClientInfo info);
 
     std::error_code _postEvent(snd_seq_event_t* event);

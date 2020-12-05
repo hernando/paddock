@@ -25,6 +25,8 @@ class DeviceErrorCategory : public std::error_category
             return "Raw MIDI device not readable";
         case Error::notWritable:
             return "Raw MIDI device not writable";
+        case Error::streamReadError:
+            return "Error extracting SysEx message from input stream";
         default:
             throw std::logic_error("Unknown error code");
         }

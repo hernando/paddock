@@ -209,16 +209,17 @@ std::shared_ptr<void> Sequencer::pollHandle(PollEvents events) const
 
 bool Sequencer::hasEvents() const
 {
-    return _hasEvents || snd_seq_event_input_pending(_handle.get(), 1) > 0;
+    return snd_seq_event_input_pending(_handle.get(), 1) > 0;
 }
 
 Expected<events::Event> Sequencer::readEvent()
 {
     snd_seq_event_t* event;
+    // This result should tell us if there are evens remaining in the buffer
+    // but in reality it always returns 1 in case of success
     auto result = snd_seq_event_input(_handle.get(), &event);
     if (result < 0)
         return tl::make_unexpected(Error::readEventFailed);
-    _hasEvents = result > 0;
     return makeEvent(event, _handle.get());
 }
 

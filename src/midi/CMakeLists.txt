@@ -19,6 +19,7 @@ target_sources(paddock_midi
     errors.cpp
 
     pads/KorgPadKontrol.cpp
+    pads/korgPadKontrol/sysex.hpp
 )
 
 target_link_libraries(paddock_midi PRIVATE

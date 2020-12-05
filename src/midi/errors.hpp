@@ -10,7 +10,8 @@ enum class DeviceError
 {
     noImplementationAvailable = 1,
     notReadable,
-    notWritable
+    notWritable,
+    streamReadError
 };
 
 enum class EngineError

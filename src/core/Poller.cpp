@@ -28,6 +28,7 @@ public:
     virtual ~_Impl()
     {
         _isRunning = false;
+        _condition.notify_one();
         _thread.join();
     }
 
@@ -41,11 +42,22 @@ public:
     std::future<void> remove(const PollHandle& handle)
     {
         std::lock_guard<std::mutex> lock(_mutex);
-        _descriptors.erase(
-            std::remove_if(_descriptors.begin(), _descriptors.end(),
+
+        auto iter = std::remove_if(_descriptors.begin(), _descriptors.end(),
                            [&handle](const PollDescriptor& x) {
                                return x.handle == handle;
-                           }), _descriptors.end());
+                           });
+
+        // Don't return a waiting future if handle is not in the descriptors.
+        if (iter == _descriptors.end())
+        {
+            std::promise<void> promise;
+            auto future = promise.get_future();
+            promise.set_value();
+            return future;
+        }
+
+        _descriptors.erase(iter, _descriptors.end());
 
         _removalPromises.emplace_back();
         return _removalPromises.back().get_future();
@@ -58,6 +70,7 @@ private:
     std::condition_variable _condition;
     std::vector<std::promise<void>> _removalPromises;
     std::thread _thread;
+    bool _isThreadWaiting{false};
 
     void _runEventDispatcher()
     {
@@ -66,8 +79,15 @@ private:
             std::vector<PollDescriptor> descriptors;
             {
                 std::unique_lock<std::mutex> lock(_mutex);
+
+                for (auto& promise : _removalPromises)
+                    promise.set_value();
+                _removalPromises.clear();
+
+                _isThreadWaiting = true;
                 _condition.wait(lock, [this] {
-                        return !_descriptors.empty(); });
+                        return !_descriptors.empty() || !_isRunning; });
+                _isThreadWaiting = false;
                 // This copy wouldn't be efficient if a large number of
                 // descriptors needs to be handled, but this is not our case.
                 descriptors = _descriptors;
@@ -76,9 +96,6 @@ private:
             // The only error that doesn't throw is when the operation
             // was interrupted, which we can safely ignore.
             poll(descriptors, _pollTimeOut);
-
-            for (auto& promise : _removalPromises)
-                promise.set_value();
         }
     }
 };

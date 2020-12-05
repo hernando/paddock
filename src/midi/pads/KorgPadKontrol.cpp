@@ -1,33 +1,35 @@
 #include "KorgPadKontrol.hpp"
 
+#include "korgPadKontrol/sysex.hpp"
+
 #include "midi/Client.hpp"
 #include "midi/Device.hpp"
 #include "midi/Engine.hpp"
+#include "midi/SysExStreamTokenizer.hpp"
+#include "midi/errors.hpp"
 
 #include "core/Log.hpp"
 #include "core/errors.hpp"
 
+#include "utils/Expected.hpp"
 #include "utils/overloaded.hpp"
 
 #include <cassert>
-#include <chrono>
 #include <iostream>
-#include <thread>
-using namespace std::literals::chrono_literals;
 
-// #define ECHO
+#define ECHO
 
 namespace paddock
 {
 namespace midi
 {
-namespace
+namespace sysex
 {
-constexpr std::byte operator"" _b(unsigned long long c)
-{
-    return std::byte{static_cast<unsigned char>(c)};
+using namespace korgPadKontrol::sysex;
 }
 
+namespace
+{
 class PadKontrolErrorCategory : public std::error_category
 {
     const char* name() const noexcept override { return "alsa-seq-error"; }
@@ -51,93 +53,11 @@ class PadKontrolErrorCategory : public std::error_category
 
 const PadKontrolErrorCategory padKontrolErrorCategory{};
 
-namespace sysex
-{
-constexpr size_t maxMessageSize = 128;
-
-constexpr auto START = 0xF0_b;
-constexpr auto END = 0xF7_b;
-constexpr auto KORG = 0x42_b;
-constexpr auto SW_PROJECT = 0x6E_b;
-constexpr auto PADKONTROL = 0x08_b;
-
-#define SYSEX_HEADER START, KORG, 0x40_b, SW_PROJECT, PADKONTROL
-
-// clang-format off
-
-// Values for 6th bytes
-// 6th Byte = cd : 0dvmmmmm  d (0: Host->Controller, 1: Controller->Host)
-//                           v (0: 2 Bytes Data Format, 1: Variable)
-//                           mmmmm (Command Number)
-// * = only in native mode
-
-// Host commands
-constexpr auto NATIVE_MODE_REQ = 0x00_b; // 000 00000
-constexpr auto DISPLAY_LED     = 0x01_b; // 000 00001 *
-constexpr auto DISPLAY_LCD     = 0x22_b; // 001 00010 *
-constexpr auto PORT_DETECT_REQ = 0x1E_b; // 000 11110
-constexpr auto DATA_DUMP_REQ   = 0x1F_b; // 000 11111
-constexpr auto PACKET_COMM_REQ = 0x3F_b; // 001 11111
-
-// Controller replies
-constexpr auto NATIVE_MODE     = 0x40_b; // 010 00000
-constexpr auto ENCODER_OUTPUT  = 0x43_b; // 010 00011 *
-constexpr auto PAD_OUTPUT      = 0x45_b; // 010 00101 *
-constexpr auto PEDAL_OUTPUT    = 0x47_b; // 010 00111 *
-constexpr auto SW_OUTPUT       = 0x48_b; // 010 01000 *
-constexpr auto KNOB_OUTPUT     = 0x49_b; // 010 01001 *
-constexpr auto XY_OUTPUT       = 0x4B_b; // 010 01011 *
-constexpr auto PORT_DETECT     = 0x7E_b; // 011 11110
-constexpr auto PACKET_COMM     = 0x5F_b; // 010 11111
-constexpr auto DATA_DUMP       = 0x7F_b; // 011 11111
-
-// Function codes for requests and replies
-constexpr auto SCENE_CHANGE_REQ       = 0x14_b;
-constexpr auto SCENE_CHANGE           = 0x4F_b;
-constexpr auto CURRENT_SCENE_DUMP_REQ = 0x10_b;
-constexpr auto CURRENT_SCENE_DUMP     = 0x40_b;
-constexpr auto GLOBAL_DATA_DUMP_REQ   = 0x0E_b;
-constexpr auto GLOBAL_DATA_DUMP       = 0x51_b;
-constexpr auto SCENE_WRITE_REQ        = 0x11_b;
-constexpr auto DATA_FORMAT_ERROR      = 0x26_b;
-constexpr auto DATA_LOAD_COMPLETED    = 0x23_b;
-constexpr auto DATA_LOAD_ERROR        = 0x24_b;
-constexpr auto WRITE_COMPLETED        = 0x21_b;
-constexpr auto WRITE_ERROR            = 0x22_b;
-// Bytes 00-03 are reserved for Native KORG mode Dump Data
-
-std::vector<std::byte> nativeModeOff = {
-    SYSEX_HEADER, NATIVE_MODE_REQ, 0x00_b, 0x00_b, END};
-
-std::vector<std::byte> nativeModeOn = {
-    SYSEX_HEADER, NATIVE_MODE_REQ, 0x00_b, 0x01_b, END};
-
-std::vector<std::byte> nativeModeInit = {
-    SYSEX_HEADER,
-    0x3F_b, 0x0A_b, 0x01_b, 0x00_b, 0x00_b, 0x00_b, 0x00_b,
-    0x00_b, 0x00_b, 0x29_b, 0x29_b, 0x29_b, END};
-std::vector<std::byte> nativeModeTest = {
-    SYSEX_HEADER,
-    DISPLAY_LCD, 0x04_b, 0x00_b, 0x59_b, 0x45_b, 0x53_b, END};
-
-std::vector<std::byte> nativeEnableOutput = {
-    SYSEX_HEADER,
-    0x3F_b, 0x2A_b, 0x00_b, 0x00_b, 0x05_b, 0x05_b, 0x05_b,
-    0x7F_b, 0x7E_b, 0x7F_b, 0x7F_b, 0x03_b, 0x0A_b, 0x0A_b,
-    0x0A_b, 0x0A_b, 0x0A_b, 0x0A_b, 0x0A_b, 0x0A_b, 0x0A_b,
-    0x0A_b, 0x0A_b, 0x0A_b, 0x0A_b, 0x0A_b, 0x0A_b, 0x0A_b,
-    0x01_b, 0x02_b, 0x03_b, 0x04_b, 0x05_b, 0x06_b, 0x07_b,
-    0x08_b, 0x09_b, 0x0A_b, 0x0B_b, 0x0C_b, 0x0d_b, 0x0E_b,
-    0x0F_b, 0x10_b, END};
-
-std::vector<std::byte> inquiryMessageRequest = {
-    START, 0x7E_b, 0x7F_b, 0x06_b, 0x01_b, END};
-};
-// clang-format on
+using RequestResult = Expected<std::vector<std::byte>>;
 
 struct IdentityRequest
 {
-    std::promise<std::vector<std::byte>> promise;
+    std::promise<RequestResult> promise;
 
     bool handle(std::span<const std::byte> payload)
     {
@@ -176,18 +96,16 @@ public:
         , _deviceInfo{std::move(deviceInfo)}
         , _midiClientName{std::move(midiClientName)}
         , _mode{Mode::native}
-        , _receiveBuffer{sysex::maxMessageSize}
     {
-        _currentMessage.reserve(sysex::maxMessageSize);
     }
 
     ~_Impl() { _stopPolling(); }
 
     Mode mode() const { return _mode; }
 
-    std::error_code setNativeMode()
+    std::error_code setMode(Mode mode)
     {
-        if (_mode == Mode::native && _client)
+        if (_mode == mode && _client)
             return std::error_code{};
 
         _stopPolling();
@@ -197,21 +115,38 @@ public:
         _client = std::nullopt;
 
         auto device = Device::open(_deviceInfo.inputs[1].hwDeviceId.c_str(),
-                                   PortDirection::duplex);
+                                   mode == Mode::native ? PortDirection::duplex
+                                                        : PortDirection::write);
+
         if (!device)
         {
             return device.error();
         }
         device->write(sysex::nativeModeOff);
-        device->write(sysex::nativeModeOn);
-        device->write(sysex::nativeModeInit);
-        device->write(sysex::nativeEnableOutput);
-        device->write(sysex::nativeModeTest);
+        if (mode == Mode::native)
+        {
+            device->write(sysex::nativeModeOn);
+            device->write(sysex::nativeModeInit);
+            device->write(sysex::nativeEnableOutput);
+            device->write(sysex::nativeModeTest);
+        }
 
-        auto client = _engine->open(_midiClientName, PortDirection::read);
+        auto client =
+            _engine->open(_midiClientName, mode == Mode::native
+                                               ? PortDirection::read
+                                               : PortDirection::duplex);
         if (!client)
         {
             return client.error();
+        }
+
+        if (mode == Mode::normal)
+        {
+            if (auto error = client->connectInput(_deviceInfo, 1);
+                error != std::error_code{})
+            {
+                return error;
+            }
         }
 
         _device = std::move(*device);
@@ -219,50 +154,7 @@ public:
 
         _startPolling();
 
-        _mode = Mode::native;
-
-        return _handShake();
-    }
-
-    std::error_code setNormalMode()
-    {
-        if (_mode == Mode::normal && _client)
-            return std::error_code{};
-
-        _stopPolling();
-
-        // The connections must be closed before proceeding.
-        _device = std::nullopt;
-        _client = std::nullopt;
-
-        auto device = Device::open(_deviceInfo.inputs[1].hwDeviceId.c_str(),
-                                   PortDirection::write);
-        if (!device)
-        {
-            return device.error();
-        }
-        device->write(sysex::nativeModeOff);
-
-        auto client = _engine->open(_midiClientName, PortDirection::duplex);
-        if (!client)
-        {
-            return client.error();
-        }
-
-        if (auto error = client->connectInput(_deviceInfo, 1);
-            error != std::error_code{})
-        {
-            return error;
-        }
-
-        // TODO there's a race condition between this assignments
-        // and the _clientInEvent and _deviceInEvent callbacks.
-        _device = std::move(*device);
-        _client = std::move(*client);
-
-        _startPolling();
-
-        _mode = Mode::normal;
+        _mode = mode;
 
         return _handShake();
     }
@@ -276,68 +168,18 @@ private:
     std::optional<Client> _client;
     std::optional<Device> _device;
 
-    std::vector<std::byte> _receiveBuffer;
-    std::vector<std::byte> _currentMessage;
-    bool _readErrorState{false};
+    SysExStreamTokenizer<sysex::maxMessageSize> _tokenizer;
 
     std::vector<PendingRequest> _pendingRequests;
 
     void _deviceInEvent()
     {
         assert(_mode == Mode::native);
-
-        do
-        {
-            auto result = _device->read(_receiveBuffer);
-            if (!result)
-            {
-                _setReadErrorState();
-                return;
-            }
-
-            auto bytesRead = *result;
-
-            if (bytesRead == 0)
-                return; // Nothing read?
-
-            for (size_t i = 0; i != bytesRead; ++i)
-            {
-                const auto byte = _receiveBuffer[i];
-
-                if (_readErrorState)
-                {
-                    // Skip util END is read to resync with the stream
-                    if (byte != sysex::END)
-                        continue;
-                    _readErrorState = false;
-                    continue;
-                }
-
-                if (byte != sysex::END)
-                {
-                    if (_currentMessage.empty() && byte != sysex::START)
-                    {
-                        // Garbage ?
-                        _setReadErrorState();
-                        continue;
-                    }
-                    _currentMessage.push_back(byte);
-                    continue;
-                }
-
-                auto payload =
-                    std::span<const std::byte>{_currentMessage.begin() + 1,
-                                               _currentMessage.end()};
+        _tokenizer.processInput(
+            [this](std::span<const std::byte> payload) {
                 _decodeMessage(payload);
-                _currentMessage.clear();
-            }
-        } while (_device->hasAvailableInput());
-    }
-
-    void _setReadErrorState()
-    {
-        _currentMessage.clear();
-        _readErrorState = true;
+            },
+            [this]() { _cancelPendingRequests(); });
     }
 
     void _decodeMessage(std::span<const std::byte> payload)
@@ -372,6 +214,7 @@ private:
             {
                 return;
             }
+
             std::visit(overloaded{[](auto&& event) {
                                       std::cout << event.description
                                                 << std::endl;
@@ -389,6 +232,8 @@ private:
     {
         if (_device)
         {
+            _tokenizer.reset(&*_device);
+
             auto callback = [this](const void*, int) { _deviceInEvent(); };
             if (auto handle = _device->pollHandle(PollEvents::in))
             {
@@ -420,26 +265,43 @@ private:
     std::error_code _handShake()
     {
         auto reply = _postRequest(IdentityRequest{});
-        if (auto result = _device->write(sysex::inquiryMessageRequest);
-            !result)
+        if (auto result = _device->write(sysex::inquiryMessageRequest); !result)
         {
             return result.error();
         }
 
         auto message = reply.get();
-        if (message[4] != sysex::KORG || message[5] != sysex::SW_PROJECT)
+        if (!message)
+            return message.error();
+
+        if ((*message)[4] != sysex::KORG || (*message)[5] != sysex::SW_PROJECT)
             return Error::unrecognizedDevice;
 
         return std::error_code{};
     }
 
     template <typename Request>
-    std::future<std::vector<std::byte>> _postRequest(Request&& request)
+    std::future<RequestResult> _postRequest(Request&& request)
     {
         _pendingRequests.emplace_back(std::forward<Request>(request));
         return std::visit(
             [](auto&& request) { return request.promise.get_future(); },
             _pendingRequests.back());
+    }
+
+    void _cancelPendingRequests()
+    {
+        // Cancel all pending requests
+        for (auto& request : _pendingRequests)
+        {
+            std::visit(
+                [](auto&& request) {
+                    request.promise.set_value(
+                        tl::make_unexpected(DeviceError::streamReadError));
+                },
+                request);
+        }
+        _pendingRequests.clear();
     }
 };
 
@@ -449,7 +311,7 @@ Expected<KorgPadKontrol> KorgPadKontrol::open(Engine* engine,
 {
     auto impl = std::make_unique<_Impl>(engine, std::move(deviceInfo),
                                         std::move(midiClientName));
-    if (auto error = impl->setNormalMode(); error != std::error_code{})
+    if (auto error = impl->setMode(Mode::normal); error != std::error_code{})
         return tl::unexpected(error);
 
     return KorgPadKontrol(std::move(impl));
@@ -462,15 +324,13 @@ KorgPadKontrol::KorgPadKontrol(std::unique_ptr<_Impl> impl)
 
 KorgPadKontrol::~KorgPadKontrol() = default;
 
-KorgPadKontrol::KorgPadKontrol(KorgPadKontrol&& other) = default;
-KorgPadKontrol& KorgPadKontrol::operator=(KorgPadKontrol&& other) = default;
+KorgPadKontrol::KorgPadKontrol(KorgPadKontrol&& other) noexcept = default;
+KorgPadKontrol& KorgPadKontrol::operator=(KorgPadKontrol&& other) noexcept =
+    default;
 
 std::error_code KorgPadKontrol::setMode(Mode mode)
 {
-    if (mode == Mode::native)
-        return _impl->setNativeMode();
-    else
-        return _impl->setNormalMode();
+    return _impl->setMode(mode);
 }
 
 KorgPadKontrol::Mode KorgPadKontrol::mode() const
