@@ -5,6 +5,9 @@
 #include "midi/Engine.hpp"
 
 #include "core/Log.hpp"
+#include "core/errors.hpp"
+
+#include "utils/overloaded.hpp"
 
 #include <cassert>
 #include <chrono>
@@ -25,6 +28,29 @@ constexpr std::byte operator"" _b(unsigned long long c)
     return std::byte{static_cast<unsigned char>(c)};
 }
 
+class PadKontrolErrorCategory : public std::error_category
+{
+    const char* name() const noexcept override { return "alsa-seq-error"; }
+    std::string message(int code) const override
+    {
+        using Error = KorgPadKontrol::Error;
+        switch (static_cast<Error>(code))
+        {
+        case Error::unrecognizedDevice:
+            return "Device not recognized as KORG PadKontrol";
+        default:
+            throw std::logic_error("Unknown error code");
+        }
+    }
+    bool equivalent(int code, const std::error_condition& condition) const
+        noexcept override
+    {
+        return (condition == core::ErrorType::midi);
+    }
+};
+
+const PadKontrolErrorCategory padKontrolErrorCategory{};
+
 namespace sysex
 {
 constexpr size_t maxMessageSize = 128;
@@ -32,9 +58,10 @@ constexpr size_t maxMessageSize = 128;
 constexpr auto START = 0xF0_b;
 constexpr auto END = 0xF7_b;
 constexpr auto KORG = 0x42_b;
+constexpr auto SW_PROJECT = 0x6E_b;
 constexpr auto PADKONTROL = 0x08_b;
 
-#define SYSEX_HEADER START, KORG, 0x40_b, 0x6E_b, PADKONTROL
+#define SYSEX_HEADER START, KORG, 0x40_b, SW_PROJECT, PADKONTROL
 
 // clang-format off
 
@@ -128,6 +155,11 @@ struct IdentityRequest
 using PendingRequest = std::variant<IdentityRequest>;
 
 } // namespace
+
+std::error_code make_error_code(KorgPadKontrol::Error error)
+{
+    return std::error_code{static_cast<int>(error), padKontrolErrorCategory};
+}
 
 bool KorgPadKontrol::matches(const ClientInfo& clientInfo)
 {
@@ -340,11 +372,16 @@ private:
             {
                 return;
             }
-            std::visit(
-                [](auto&& event) {
-                    std::cout << event.description << std::endl;
-                },
-                *event);
+            std::visit(overloaded{[](auto&& event) {
+                                      std::cout << event.description
+                                                << std::endl;
+                                  },
+                                  [this](const events::SysEx& event) {
+                                      _decodeMessage(std::span<const std::byte>{
+                                          event.data.begin() + 1,
+                                          event.data.end() - 1});
+                                  }},
+                       *event);
         }
     }
 
@@ -383,15 +420,15 @@ private:
     std::error_code _handShake()
     {
         auto reply = _postRequest(IdentityRequest{});
-        _device->write(sysex::inquiryMessageRequest);
-
-        std::cout << "Identity" << std::endl;
-        auto message = reply.get();
-        for (auto byte : message)
+        if (auto result = _device->write(sysex::inquiryMessageRequest);
+            !result)
         {
-            printf("%.2X ", int(byte));
+            return result.error();
         }
-        printf("\n");
+
+        auto message = reply.get();
+        if (message[4] != sysex::KORG || message[5] != sysex::SW_PROJECT)
+            return Error::unrecognizedDevice;
 
         return std::error_code{};
     }
@@ -412,7 +449,7 @@ Expected<KorgPadKontrol> KorgPadKontrol::open(Engine* engine,
 {
     auto impl = std::make_unique<_Impl>(engine, std::move(deviceInfo),
                                         std::move(midiClientName));
-    if (auto error = impl->setNativeMode(); error != std::error_code{})
+    if (auto error = impl->setNormalMode(); error != std::error_code{})
         return tl::unexpected(error);
 
     return KorgPadKontrol(std::move(impl));

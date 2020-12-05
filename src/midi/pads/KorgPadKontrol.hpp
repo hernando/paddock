@@ -16,6 +16,10 @@ class KorgPadKontrol
 public:
     friend class Engine;
 
+    enum class Error {
+        unrecognizedDevice = 1
+    };
+
     enum class Mode {native, normal};
 
     static bool matches(const ClientInfo& client);
@@ -50,3 +54,13 @@ private:
 
 } // namespace midi
 } // namespace paddock
+
+#include <system_error>
+
+namespace std
+{
+template <>
+struct is_error_code_enum<paddock::midi::KorgPadKontrol::Error> : true_type
+{
+};
+} // namespace std
