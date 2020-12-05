@@ -2,8 +2,11 @@
 
 #include "../poll.hpp"
 
+#include <cassert>
 #include <poll.h>
 #include <string.h>
+
+#include <iostream>
 
 namespace paddock
 {
@@ -17,7 +20,10 @@ Expected<unsigned int> poll(std::span<PollDescriptor> descriptors,
     std::vector<struct pollfd> fds;
     fds.reserve(descriptors.size());
     for (auto descriptor : descriptors)
+    {
+        assert(descriptor.handle);
         fds.push_back(*static_cast<pollfd*>(descriptor.handle.get()));
+    }
 
     switch (int result = ::poll(fds.data(), fds.size(), timeout.count()))
     {

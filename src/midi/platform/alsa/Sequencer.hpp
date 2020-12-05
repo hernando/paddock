@@ -1,15 +1,15 @@
 #pragma once
 
 #include "midi/Client.hpp"
+#include "midi/events.hpp"
 
 #include "utils/Expected.hpp"
+
+#include <alsa/asoundlib.h>
 
 #include <memory>
 #include <system_error>
 #include <thread>
-
-struct _snd_seq;
-typedef struct _snd_seq snd_seq_t;
 
 namespace paddock
 {
@@ -22,12 +22,16 @@ class Sequencer
 public:
     enum class Error
     {
-        OpenSequencerFailed = 1,
-        SetClientNameFailed,
-        PortCreationFailed
+        openSequencerFailed = 1,
+        setClientNameFailed,
+        portCreationFailed,
+        portSubscriptionFailed,
+        readEventFailed, // This can happen if the input buffer overran
+        writeEventFailed
     };
 
-    static Expected<Sequencer> open(const char* clientName);
+    static Expected<Sequencer> open(const char* clientName,
+                                    PortDirection direction);
 
     ~Sequencer();
 
@@ -39,11 +43,29 @@ public:
 
     const ClientInfo& info() const;
 
-private:
-    class _Impl;
-    std::unique_ptr<_Impl> _impl;
+    std::error_code connectInput(const ClientInfo& other, unsigned int outPort);
+    std::error_code connectOutput(const ClientInfo& other, unsigned int inPort);
 
-    Sequencer(std::unique_ptr<_Impl> impl);
+    std::shared_ptr<void> pollHandle(PollEvents events) const;
+
+    bool hasEvents() const;
+    Expected<events::Event> readEvent();
+    std::error_code postEvent(const events::Event& event);
+
+private:
+    using Handle = std::unique_ptr<snd_seq_t, int (*)(snd_seq_t*)>;
+
+    Handle _handle;
+    ClientInfo _clientInfo;
+
+    std::shared_ptr<void> _inPollHandle;
+    std::shared_ptr<void> _outPollHandle;
+
+    bool _hasEvents{false};
+
+    Sequencer(Handle handle, ClientInfo info);
+
+    std::error_code _postEvent(snd_seq_event_t* event);
 };
 
 } // namespace alsa

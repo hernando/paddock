@@ -3,5 +3,6 @@ add_library(paddock::utils ALIAS paddock_utils)
 
 target_sources(paddock_utils INTERFACE
   Expected.hpp
+  overloaded.hpp
 )
 

@@ -11,6 +11,11 @@ class AbstractDevice
 public:
     virtual ~AbstractDevice() {}
     virtual Expected<size_t> write(std::span<const std::byte> buffer) = 0;
+    virtual Expected<size_t> read(std::span<std::byte> buffer) = 0;
+    virtual bool hasAvailableInput() const = 0;
+    virtual std::error_code setParameters(
+        const Device::Parameters& parameters) = 0;
+    virtual std::shared_ptr<void> pollHandle(PollEvents events) const = 0;
 };
 
 template <typename T>
@@ -25,6 +30,26 @@ public:
     Expected<size_t> write(std::span<const std::byte> buffer) final
     {
         return _device.write(buffer);
+    }
+
+    Expected<size_t> read(std::span<std::byte> buffer) final
+    {
+        return _device.read(buffer);
+    }
+
+    bool hasAvailableInput() const final
+    {
+        return _device.hasAvailableInput();
+    }
+
+    std::error_code setParameters(const Device::Parameters& parameters) final
+    {
+        return _device.setParameters(parameters);
+    }
+
+    std::shared_ptr<void> pollHandle(PollEvents events) const final
+    {
+        return _device.pollHandle(events);
     }
 
 private:
@@ -62,6 +87,26 @@ Expected<size_t> Device::write(std::span<const std::byte> buffer)
 Expected<size_t> Device::write(const std::vector<std::byte>& buffer)
 {
     return _impl->write(buffer);
+}
+
+Expected<size_t> Device::read(std::span<std::byte> buffer)
+{
+    return _impl->read(buffer);
+}
+
+bool Device::hasAvailableInput() const
+{
+    return _impl->hasAvailableInput();
+}
+
+std::error_code Device::setParameters(const Parameters& parameters)
+{
+    return _impl->setParameters(parameters);
+}
+
+std::shared_ptr<void> Device::pollHandle(PollEvents events) const
+{
+    return _impl->pollHandle(events);
 }
 
 } // namespace midi

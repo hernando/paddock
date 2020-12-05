@@ -2,6 +2,7 @@
 
 #include "platform/poll.hpp"
 
+#include <condition_variable>
 #include <mutex>
 #include <thread>
 #include <vector>
@@ -34,38 +35,50 @@ public:
     {
         std::lock_guard<std::mutex> lock(_mutex);
         _descriptors.push_back(std::move(descriptor));
+        _condition.notify_one();
     }
 
-    void remove(const PollDescriptor& descriptor)
+    std::future<void> remove(const PollHandle& handle)
     {
         std::lock_guard<std::mutex> lock(_mutex);
         _descriptors.erase(
             std::remove_if(_descriptors.begin(), _descriptors.end(),
-                           [&descriptor](const PollDescriptor& x) {
-                               return x == descriptor;
-                           }));
+                           [&handle](const PollDescriptor& x) {
+                               return x.handle == handle;
+                           }), _descriptors.end());
+
+        _removalPromises.emplace_back();
+        return _removalPromises.back().get_future();
     }
 
 private:
     std::atomic_bool _isRunning{false};
-    std::mutex _mutex;
-    std::thread _thread;
     std::vector<PollDescriptor> _descriptors;
+    std::mutex _mutex;
+    std::condition_variable _condition;
+    std::vector<std::promise<void>> _removalPromises;
+    std::thread _thread;
 
     void _runEventDispatcher()
     {
         while (_isRunning)
         {
-            // This copy wouldn't be efficient if a large number of
-            // descriptors needs to be handled, but this is not our case.
-            auto descriptors = [&]() {
-                std::lock_guard<std::mutex> lock(_mutex);
-                return _descriptors;
-            }();
+            std::vector<PollDescriptor> descriptors;
+            {
+                std::unique_lock<std::mutex> lock(_mutex);
+                _condition.wait(lock, [this] {
+                        return !_descriptors.empty(); });
+                // This copy wouldn't be efficient if a large number of
+                // descriptors needs to be handled, but this is not our case.
+                descriptors = _descriptors;
+            };
 
             // The only error that doesn't throw is when the operation
             // was interrupted, which we can safely ignore.
             poll(descriptors, _pollTimeOut);
+
+            for (auto& promise : _removalPromises)
+                promise.set_value();
         }
     }
 };
@@ -80,14 +93,16 @@ Poller::~Poller() = default;
 Poller::Poller(Poller&& other) = default;
 Poller& Poller::operator=(Poller&& other) = default;
 
-void Poller::add(PollDescriptor descriptor)
+void Poller::add(PollHandle handle, PollCallback callback)
 {
-    _impl->add(std::move(descriptor));
+    if (!handle)
+        return;
+    _impl->add(PollDescriptor{std::move(handle), std::move(callback)});
 }
 
-void Poller::remove(const PollDescriptor& descriptor)
+std::future<void> Poller::remove(const PollHandle& handle)
 {
-    _impl->remove(std::move(descriptor));
+    return _impl->remove(handle);
 }
 
 } // namespace core

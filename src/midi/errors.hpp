@@ -15,7 +15,8 @@ enum class DeviceError
 
 enum class EngineError
 {
-    noEngineAvailable = 1
+    noEngineAvailable = 1,
+    noDeviceFound
 };
 
 std::error_code make_error_code(DeviceError error);

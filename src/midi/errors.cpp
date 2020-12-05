@@ -51,6 +51,8 @@ class MidiEngineErrorCategory : public std::error_category
         {
         case Error::noEngineAvailable:
             return "No MIDI engine available";
+        case Error::noDeviceFound:
+            return "No known hardware MIDI controller found";
         default:
             throw std::logic_error("Unknown error code");
         }

@@ -5,7 +5,7 @@ paddock_find_package(Qt5 COMPONENTS Core Qml Quick  QuickWidgets QuickControls2
 paddock_find_package(Qt5QuickCompiler REQUIRED QUIET)
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
-paddock_find_package(Threads REQUIRED)
+paddock_find_package(Threads REQUIRED QUIET)
 
 # Linux dependencies
 paddock_find_package(alsa QUIET)

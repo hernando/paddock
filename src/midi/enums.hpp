@@ -11,6 +11,12 @@ enum class ClientType
     system
 };
 
+enum class PollEvents
+{
+    in,
+    out
+};
+
 enum class PortDirection
 {
     read,

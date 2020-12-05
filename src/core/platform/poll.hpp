@@ -13,6 +13,12 @@ namespace paddock
 namespace core
 {
 
+struct PollDescriptor
+{
+    PollHandle handle;
+    PollCallback callback;
+};
+
 /// Poll a list descriptors for requested events.
 /// If an event has occurred in a descriptor, the event type is stored in
 /// its associated obect and if a callback has been set, it gets called.

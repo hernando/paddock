@@ -6,8 +6,8 @@ target_sources(paddock_midi
     Client.hpp
     Device.hpp
     Engine.hpp
-    Events.hpp
     errors.hpp
+    events.hpp
 
     pads/KorgPadKontrol.hpp
 
@@ -35,6 +35,8 @@ if(PADDOCK_USE_ALSA)
     platform/alsa/RawMidi.cpp
     platform/alsa/Sequencer.hpp
     platform/alsa/Sequencer.cpp
+    platform/alsa/events.hpp
+    platform/alsa/events.cpp
   )
 
   target_link_libraries(paddock_midi

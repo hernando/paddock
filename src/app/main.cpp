@@ -12,8 +12,10 @@
 #include <QQmlFileSelector>
 #include <QQuickView>
 
-#include "midi/Engine.hpp"
 #include "midi/Client.hpp"
+#include "midi/Device.hpp"
+#include "midi/Engine.hpp"
+#include "midi/pads/KorgPadKontrol.hpp"
 
 #include <iostream>
 
@@ -39,12 +41,7 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    auto midiClient = midiEngine->open(session.name().c_str());
-    if (!midiClient)
-    {
-        std::cout << midiClient.error().message() << std::endl;
-        return -1;
-    }
+    const auto padController = midiEngine->connect(session.name().c_str());
 
     QQmlApplicationEngine engine;
     new QQmlFileSelector(&engine); // Engine takes owership

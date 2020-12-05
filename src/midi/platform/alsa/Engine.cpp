@@ -27,8 +27,7 @@ ClientType getClientType(const snd_seq_client_info_t* info)
     }
 }
 
-std::optional<PortDirection> getPortDirection(
-    const snd_seq_port_info_t* info)
+std::optional<PortDirection> getPortDirection(const snd_seq_port_info_t* info)
 {
     int capability = snd_seq_port_info_get_capability(info);
     if (capability & SND_SEQ_PORT_CAP_DUPLEX)
@@ -67,13 +66,18 @@ std::optional<PortInfo> getPortInfo(snd_seq_t* handle, int client, int port)
     return portInfo;
 }
 
-std::shared_ptr<void> makeClientId(snd_seq_client_info_t* info)
+ClientId makeClientId(snd_seq_client_info_t* info)
 {
     snd_seq_client_info_t* copy;
     if (snd_seq_client_info_malloc(&copy) == -1)
         throw std::bad_alloc();
     snd_seq_client_info_copy(copy, info);
     return std::shared_ptr<void>(copy, snd_seq_client_info_free);
+}
+
+std::shared_ptr<snd_seq_client_info_t> getClientInfo(ClientId clientId)
+{
+    return std::static_pointer_cast<snd_seq_client_info_t>(clientId);
 }
 
 struct HwPortInfo
@@ -172,14 +176,58 @@ PortNameToDeviceMap getHwMidiDevices()
 
     return portToDevice;
 }
+
+ClientInfo makeClientInfo(snd_seq_t* handle, snd_seq_client_info_t* info,
+                          const PortNameToDeviceMap& portToDevice)
+{
+    ClientInfo result;
+    result.name = snd_seq_client_info_get_name(info);
+    result.type = getClientType(info);
+    result.id = makeClientId(info);
+
+    auto clientId = snd_seq_client_info_get_client(info);
+    auto numPorts = snd_seq_client_info_get_num_ports(info);
+
+    for (int i = 0; i < numPorts; ++i)
+    {
+        auto portInfo = getPortInfo(handle, clientId, i);
+
+        if (!portInfo)
+            continue;
+
+        portInfo->clientId = result.id;
+        if (auto iter = portToDevice.find(portInfo->name);
+            iter != portToDevice.end() &&
+            iter->second.direction == portInfo->direction)
+        {
+            portInfo->hwDeviceId = iter->second.deviceId;
+        }
+
+        switch (portInfo->direction)
+        {
+        case PortDirection::read:
+            result.outputs.push_back(*portInfo);
+            break;
+        case PortDirection::write:
+            result.inputs.push_back(*portInfo);
+            break;
+        case PortDirection::duplex:
+            result.outputs.push_back(*portInfo);
+            result.inputs.push_back(*portInfo);
+            break;
+        default:;
+        }
+    }
+    return result;
+}
 } // namespace
 
-Expected<Sequencer> Engine::openClient(const char* name)
+Expected<Sequencer> Engine::openClient(const char* name, PortDirection direction)
 {
-    return Sequencer::open(name);
+    return Sequencer::open(name, direction);
 }
 
-std::vector<ClientInfo> Engine::clientInfos()
+std::vector<ClientInfo> Engine::queryClientInfos() const
 {
     const auto portToDevice = getHwMidiDevices();
 
@@ -202,51 +250,27 @@ std::vector<ClientInfo> Engine::clientInfos()
         if (snd_seq_client_info_get_client(info) == thisId)
             continue;
 
-        ClientInfo clientInfo;
-        clientInfo.name = snd_seq_client_info_get_name(info);
-        clientInfo.type = getClientType(info);
-        clientInfo.id = makeClientId(info);
-
-        auto clientId = snd_seq_client_info_get_client(info);
-        auto numPorts = snd_seq_client_info_get_num_ports(info);
-
-        for (int i = 0; i < numPorts; ++i)
-        {
-            auto portInfo = getPortInfo(handle, clientId, i);
-
-            if (!portInfo)
-                continue;
-
-            portInfo->clientId = clientInfo.id;
-            if (auto iter = portToDevice.find(portInfo->name);
-                iter != portToDevice.end() &&
-                iter->second.direction == portInfo->direction)
-            {
-                portInfo->hwDeviceId = iter->second.deviceId;
-            }
-
-            switch (portInfo->direction)
-            {
-            case PortDirection::read:
-                clientInfo.outputs.push_back(*portInfo);
-                break;
-            case PortDirection::write:
-                clientInfo.inputs.push_back(*portInfo);
-                break;
-            case PortDirection::duplex:
-                clientInfo.outputs.push_back(*portInfo);
-                clientInfo.inputs.push_back(*portInfo);
-                break;
-            default:;
-            }
-        }
-
-        clientInfos.push_back(std::move(clientInfo));
+        clientInfos.push_back(makeClientInfo(handle, info, portToDevice));
     }
 
     snd_seq_close(handle);
 
     return clientInfos;
+}
+
+std::optional<ClientInfo> Engine::queryClientInfo(const ClientId& id) const
+{
+    if (!id)
+        return {};
+
+    snd_seq_t* handle;
+    if (snd_seq_open(&handle, "default", SND_SEQ_OPEN_DUPLEX, 0) == -1)
+        return {};
+
+    auto clientInfo = getClientInfo(id);
+    // This function may return old data if the client has been disconnected
+    // Since the ClientId pointer was created.
+    return makeClientInfo(handle, clientInfo.get(), getHwMidiDevices());
 }
 
 } // namespace alsa

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "midi/Device.hpp"
 #include "midi/enums.hpp"
 
 #include "utils/Expected.hpp"
@@ -21,11 +22,12 @@ public:
     enum class Error
     {
         openDeviceFailed = 1,
+        setParametersFailed,
+        readError,
         writeError
     };
 
-    static Expected<RawMidi> open(const char* device,
-                                  PortDirection direction);
+    static Expected<RawMidi> open(const char* device, PortDirection direction);
 
     ~RawMidi();
 
@@ -36,12 +38,24 @@ public:
     RawMidi& operator=(const RawMidi& other) = delete;
 
     Expected<size_t> write(std::span<const std::byte> buffer);
+    Expected<size_t> read(std::span<std::byte> buffer);
+
+    bool hasAvailableInput() const;
+
+    std::error_code setParameters(const Device::Parameters& parameters);
+
+    std::shared_ptr<void> pollHandle(PollEvents events) const;
 
 private:
     using Handle = std::unique_ptr<snd_rawmidi_t, int (*)(snd_rawmidi_t*)>;
 
     Handle _inHandle;
     Handle _outHandle;
+
+    std::shared_ptr<void> _inPollHandle;
+    std::shared_ptr<void> _outPollHandle;
+
+    mutable size_t _availableBytes{0};
 
     RawMidi(Handle inHandle, Handle outHandle);
 };

@@ -2,6 +2,10 @@
 
 #include "Client.hpp"
 
+#include "core/Poller.hpp"
+
+#include "pads/pads.hpp"
+
 #include "utils/Expected.hpp"
 
 #include <memory>
@@ -29,12 +33,21 @@ public:
     Engine(const Engine& other) = delete;
     Engine& operator=(const Engine& other) = delete;
 
-    // Open a connection to the system sequencer.
-    // @param name Client name
-    Expected<Client> open(const char* name);
-
     // Get the infomation about all the clients in the system
-    std::vector<ClientInfo> clientInfos() const;
+    std::vector<ClientInfo> queryClientInfos() const;
+
+    std::optional<ClientInfo> queryClientInfo(const ClientId& id) const;
+
+    /// Open a connection to the system sequencer.
+    /// @param name Client name
+    Expected<Client> open(const std::string& name, PortDirection direction);
+
+    /// Connect to the first recognized hardware controller.
+    /// @param clientName the name for the MIDI sequencer client
+    Expected<Pad> connect(const std::string& clientName);
+
+    void add(core::PollHandle handle, core::PollCallback callback);
+    std::future<void> remove(const core::PollHandle& handle);
 
 private:
     std::unique_ptr<AbstractEngine> _impl;
