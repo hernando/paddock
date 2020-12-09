@@ -1,0 +1,138 @@
+#include <gtest/gtest.h>
+
+#include "utils/byte.hpp"
+#include "utils/encodings.hpp"
+
+namespace paddock
+{
+using Bytes = std::vector<std::byte>;
+
+TEST(to7bitEncoding, 1_byte)
+{
+    auto result = to7bitEncoding(Bytes{0xFF_b});
+    ASSERT_EQ(result, Bytes({0x7F_b, 0x40_b}));
+}
+
+TEST(to7bitEncoding, 2_bytes)
+{
+    auto result = to7bitEncoding(Bytes{0xFF_b, 0x01_b});
+    ASSERT_EQ(result, Bytes({0x7F_b, 0x40_b, 0x20_b}));
+}
+
+TEST(to7bitEncoding, 3_bytes)
+{
+    auto result = to7bitEncoding(Bytes{0xFF_b, 0x00_b, 0xFF_b});
+    ASSERT_EQ(result, Bytes({0x7F_b, 0x40_b, 0x1F_b, 0x70_b}));
+}
+
+TEST(to7bitEncoding, 4_bytes)
+{
+    auto result = to7bitEncoding(Bytes{0xFF_b, 0x00_b, 0xFF_b, 0x01_b});
+    ASSERT_EQ(result, Bytes({0x7F_b, 0x40_b, 0x1F_b, 0x70_b, 0x08_b}));
+}
+
+TEST(to7bitEncoding, 5_bytes)
+{
+    auto result = to7bitEncoding(Bytes{0xFF_b, 0x00_b, 0xFF_b, 0x00_b, 0xFF_b});
+    ASSERT_EQ(result, Bytes({0x7F_b, 0x40_b, 0x1F_b, 0x70_b, 0x07_b, 0x7C_b}));
+}
+
+TEST(to7bitEncoding, 6_bytes)
+{
+    auto result =
+        to7bitEncoding(Bytes{0xFF_b, 0x00_b, 0xFF_b, 0x00_b, 0xFF_b, 0x01_b});
+    ASSERT_EQ(result,
+              Bytes({0x7F_b, 0x40_b, 0x1F_b, 0x70_b, 0x07_b, 0x7C_b, 0x02_b}));
+}
+
+TEST(to7bitEncoding, 7_bytes)
+{
+    auto result = to7bitEncoding(
+        Bytes{0xFF_b, 0x00_b, 0xFF_b, 0x00_b, 0xFF_b, 0x00_b, 0xFF_b});
+    ASSERT_EQ(result, Bytes({0x7F_b, 0x40_b, 0x1F_b, 0x70_b, 0x07_b, 0x7C_b,
+                             0x01_b, 0x7F_b}));
+}
+
+TEST(to7bitEncoding, 8_bytes)
+{
+    auto result = to7bitEncoding(
+        Bytes{0xFF_b, 0x00_b, 0xFF_b, 0x00_b, 0xFF_b, 0x00_b, 0xFF_b, 0x01_b});
+    ASSERT_EQ(result, Bytes({0x7F_b, 0x40_b, 0x1F_b, 0x70_b, 0x07_b, 0x7C_b,
+                             0x01_b, 0x7F_b, 0x00_b, 0x40_b}));
+}
+
+TEST(from7bitEncoding, 14_bytes)
+{
+    auto result = to7bitEncoding(Bytes{0xFF_b, 0x00_b, 0xFF_b, 0x00_b, 0xFF_b,
+                                       0x00_b, 0xFF_b, 0x00_b, 0xFF_b, 0x00_b,
+                                       0xFF_b, 0x00_b, 0xFF_b, 0x00_b});
+    ASSERT_EQ(result, Bytes({0x7F_b, 0x40_b, 0x1F_b, 0x70_b, 0x07_b, 0x7C_b,
+                             0x01_b, 0x7F_b, 0x00_b, 0x3F_b, 0x60_b, 0x0F_b,
+                             0x78_b, 0x03_b, 0x7E_b, 0x00_b}));
+}
+
+TEST(from7bitEncoding, 1_byte)
+{
+    auto result = from7bitEncoding(Bytes{0x7F_b});
+    ASSERT_EQ(result, Bytes{0xFE_b});
+}
+
+TEST(from7bitEncoding, 2_bytes)
+{
+    auto result = from7bitEncoding(Bytes{0x7F_b, 0x41_b});
+    ASSERT_EQ(result, Bytes({0xFF_b, 0x04_b}));
+}
+
+TEST(from7bitEncoding, 3_bytes)
+{
+    auto result = from7bitEncoding(Bytes{0x7F_b, 0x40_b, 0x1F_b});
+    ASSERT_EQ(result, Bytes({0xFF_b, 0x00_b, 0xF8_b}));
+}
+
+TEST(from7bitEncoding, 4_bytes)
+{
+    auto result = from7bitEncoding(Bytes{0x7F_b, 0x40_b, 0x1F_b, 0x70_b});
+    ASSERT_EQ(result, Bytes({0xFF_b, 0x00_b, 0xFF_b, 0x00_b}));
+}
+
+TEST(from7bitEncoding, 5_bytes)
+{
+    auto result =
+        from7bitEncoding(Bytes{0x7F_b, 0x40_b, 0x1F_b, 0x70_b, 0x07_b});
+    ASSERT_EQ(result, Bytes({0xFF_b, 0x00_b, 0xFF_b, 0x00_b, 0xE0_b}));
+}
+
+TEST(from7bitEncoding, 6_bytes)
+{
+    auto result =
+        from7bitEncoding(Bytes{0x7F_b, 0x40_b, 0x1F_b, 0x70_b, 0x07_b, 0x7C_b});
+    ASSERT_EQ(result, Bytes({0xFF_b, 0x00_b, 0xFF_b, 0x00_b, 0xFF_b, 0x00_b}));
+}
+
+TEST(from7bitEncoding, 7_bytes)
+{
+    auto result = from7bitEncoding(
+        Bytes{0x7F_b, 0x40_b, 0x1F_b, 0x70_b, 0x07_b, 0x7C_b, 0x01_b});
+    ASSERT_EQ(result,
+              Bytes({0xFF_b, 0x00_b, 0xFF_b, 0x00_b, 0xFF_b, 0x00_b, 0x80_b}));
+}
+
+TEST(from7bitEncoding, 8_bytes)
+{
+    auto result = from7bitEncoding(
+        Bytes{0x7F_b, 0x40_b, 0x1F_b, 0x70_b, 0x07_b, 0x7C_b, 0x01_b, 0x7F_b});
+    ASSERT_EQ(result,
+              Bytes({0xFF_b, 0x00_b, 0xFF_b, 0x00_b, 0xFF_b, 0x00_b, 0xFF_b}));
+}
+
+TEST(from7bitEncoding, 16_bytes)
+{
+    auto result = from7bitEncoding(
+        Bytes{0x7F_b, 0x40_b, 0x1F_b, 0x70_b, 0x07_b, 0x7C_b, 0x01_b, 0x7F_b,
+              0x00_b, 0x3F_b, 0x60_b, 0x0F_b, 0x78_b, 0x03_b, 0x7E_b, 0x00_b});
+    ASSERT_EQ(result,
+              Bytes({0xFF_b, 0x00_b, 0xFF_b, 0x00_b, 0xFF_b, 0x00_b, 0xFF_b,
+                     0x00_b, 0xFF_b, 0x00_b, 0xFF_b, 0x00_b, 0xFF_b, 0x00_b}));
+}
+
+} // namespace paddock
