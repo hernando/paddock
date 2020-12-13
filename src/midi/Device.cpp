@@ -10,7 +10,8 @@ class AbstractDevice
 {
 public:
     virtual ~AbstractDevice() {}
-    virtual Expected<size_t> write(std::span<const std::byte> buffer) = 0;
+    virtual Expected<size_t> write(std::span<const std::byte> buffer,
+                                   bool flush) = 0;
     virtual Expected<size_t> read(std::span<std::byte> buffer) = 0;
     virtual bool hasAvailableInput() const = 0;
     virtual std::error_code setParameters(
@@ -27,7 +28,7 @@ public:
     {
     }
 
-    Expected<size_t> write(std::span<const std::byte> buffer) final
+    Expected<size_t> write(std::span<const std::byte> buffer, bool flush) final
     {
         return _device.write(buffer);
     }
@@ -37,10 +38,7 @@ public:
         return _device.read(buffer);
     }
 
-    bool hasAvailableInput() const final
-    {
-        return _device.hasAvailableInput();
-    }
+    bool hasAvailableInput() const final { return _device.hasAvailableInput(); }
 
     std::error_code setParameters(const Device::Parameters& parameters) final
     {
@@ -79,14 +77,14 @@ Device::~Device() = default;
 Device::Device(Device&&) = default;
 Device& Device::operator=(Device&& other) = default;
 
-Expected<size_t> Device::write(std::span<const std::byte> buffer)
+Expected<size_t> Device::write(std::span<const std::byte> buffer, bool flush)
 {
-    return _impl->write(buffer);
+    return _impl->write(buffer, flush);
 }
 
-Expected<size_t> Device::write(const std::vector<std::byte>& buffer)
+Expected<size_t> Device::write(const std::vector<std::byte>& buffer, bool flush)
 {
-    return _impl->write(buffer);
+    return _impl->write(buffer, flush);
 }
 
 Expected<size_t> Device::read(std::span<std::byte> buffer)

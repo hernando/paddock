@@ -31,6 +31,7 @@ public:
 public Q_SLOTS:
     void setNativeMode();
     void setNormalMode();
+    void dumpCurrentScene();
 
 signals:
     void isNativeChanged();

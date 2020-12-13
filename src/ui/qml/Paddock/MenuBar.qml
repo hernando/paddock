@@ -10,19 +10,28 @@ QQC.MenuBar {
 
     QQC.Menu {
         title: qsTr("&File")
-        QQC.Action { text: qsTr("&New...") }
+        QQC.Action {
+            text: qsTr("&New...")
+            shortcut: "Ctrl+N"
+        }
         QQC.Action {
             enabled: !session.isNsmSession
             text: qsTr("&Open...")
+            shortcut: "Ctrl+O"
         }
         QQC.Action {
             enabled: session.isNsmSession
             text: qsTr("&Import into...")
+            shortcut: "Ctrl+I"
         }
-        QQC.Action { text: qsTr("&Save") }
+        QQC.Action {
+            text: qsTr("&Save")
+            shortcut: "Ctrl+S"
+        }
         QQC.Action {
             enabled: !session.isNsmSession
             text: qsTr("Save &As...")
+            shortcut: "Ctrl+Shift+S"
         }
         QQC.MenuSeparator { }
         QQC.Action { text: qsTr("&Close") }
@@ -31,15 +40,25 @@ QQC.MenuBar {
 
     QQC.Menu {
         title: qsTr("&Controller")
-        QQC.Action {
-            enabled: session.controller !== undefined && session.controller.isNative
-            text: qsTr("&Set normal mode")
+        MenuItem {
+            enabled: session.controller !== undefined &&
+                     session.controller.isNative
+            text: qsTr("Set &normal mode")
             onTriggered: session.controller.setNormalMode()
+            shortcut: "Ctrl+M"
         }
-        QQC.Action {
-            enabled: session.controller !== undefined && !session.controller.isNative
-            text: qsTr("&Set native mode")
+        MenuItem {
+            enabled: session.controller !== undefined &&
+                     !session.controller.isNative
+            text: qsTr("Set &native mode")
             onTriggered: session.controller.setNativeMode()
+            shortcut: "Ctrl+M"
+        }
+        MenuItem {
+            text: qsTr("&Dump scene")
+            enabled: session.controller !== undefined
+            onTriggered: session.controller.dumpCurrentScene()
+            shortcut: "Ctrl+D"
         }
     }
 

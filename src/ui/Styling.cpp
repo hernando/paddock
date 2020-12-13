@@ -51,8 +51,12 @@ struct StylingData
         {
             QColor control{"#E7E7F0"};
             QColor background{"#FFFFE0"};
+            QColor backgroundDisabled{"#FFFFE0"};
+            QColor backgroundHovered{"#CFCFE0"};
             QColor border{"#303040"};
             QColor foreground{"#00000"};
+            QColor foregroundHovered{"#00000"};
+            QColor foregroundDisabled{"#7F7F7F"};
         } layers;
 
         struct State
@@ -71,9 +75,13 @@ Styling::Styling()
     // Colors
     DECLARE_GROUP(_colors, layers)
     DECLARE_STYLE_COLOR(layers, background);
+    DECLARE_STYLE_COLOR(layers, backgroundHovered);
+    DECLARE_STYLE_COLOR(layers, backgroundDisabled);
     DECLARE_STYLE_COLOR(layers, border);
     DECLARE_STYLE_COLOR(layers, control);
     DECLARE_STYLE_COLOR(layers, foreground);
+    DECLARE_STYLE_COLOR(layers, foregroundHovered);
+    DECLARE_STYLE_COLOR(layers, foregroundDisabled);
 
     DECLARE_GROUP(_colors, state)
     DECLARE_STYLE_COLOR(state, blinking);

@@ -99,7 +99,7 @@ RawMidi::~RawMidi() = default;
 RawMidi::RawMidi(RawMidi&& other) = default;
 RawMidi& RawMidi::operator=(RawMidi&& other) = default;
 
-Expected<size_t> RawMidi::write(std::span<const std::byte> buffer)
+Expected<size_t> RawMidi::write(std::span<const std::byte> buffer, bool flush)
 {
     if (!_outHandle)
         return tl::make_unexpected(DeviceError::notWritable);
@@ -117,8 +117,11 @@ Expected<size_t> RawMidi::write(std::span<const std::byte> buffer)
             remaining -= res;
         }
     }
-    if (snd_rawmidi_drain(_outHandle.get()) == -1)
-        return tl::make_unexpected(Error::writeError);
+    if (flush)
+    {
+        if (snd_rawmidi_drain(_outHandle.get()) == -1)
+            return tl::make_unexpected(Error::writeError);
+    }
 
     return buffer.size();
 }

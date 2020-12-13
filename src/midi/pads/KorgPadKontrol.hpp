@@ -1,7 +1,10 @@
 #pragma once
 
+#include "korgPadKontrol/nativeEvents.hpp"
+
 #include <utils/Expected.hpp>
 
+#include <future>
 #include <memory>
 
 namespace paddock
@@ -11,22 +14,32 @@ namespace midi
 class ClientInfo;
 class Engine;
 
+namespace korgPadKontrol
+{
+class Program;
+class Scene;
+}
+
 class KorgPadKontrol
 {
 public:
     friend class Engine;
 
-    enum class Error {
+    enum class Error
+    {
         unrecognizedDevice = 1,
-        packetCommunicationError,
+        packetCommunicationError
     };
 
-    enum class Mode {native, normal};
+    enum class Mode
+    {
+        native,
+        normal
+    };
 
     static bool matches(const ClientInfo& client);
 
-    static Expected<KorgPadKontrol> open(Engine* engine,
-                                         ClientInfo device,
+    static Expected<KorgPadKontrol> open(Engine* engine, ClientInfo device,
                                          std::string midiClientName);
 
     ~KorgPadKontrol();
@@ -39,6 +52,15 @@ public:
 
     std::error_code setMode(Mode mode);
     Mode mode() const;
+
+    void setProgram(korgPadKontrol::Program program);
+
+    // We need future.then to return std::future<std::error_code> without
+    // complicatint the implementation.
+    std::future<Expected<bool>> sendNativeCommand(
+        const korgPadKontrol::Command& command);
+
+    Expected<korgPadKontrol::Scene> queryCurrentScene();
 
 private:
     class _Impl;

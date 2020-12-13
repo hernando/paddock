@@ -2,3 +2,4 @@ module Paddock
 ControllerLayout 1.0 ControllerLayout.qml
 MainWindow 1.0 MainWindow.qml
 MenuBar 1.0 MenuBar.qml
+MenuItem 1.0 MenuItem.qml

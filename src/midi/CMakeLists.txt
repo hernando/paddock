@@ -7,9 +7,14 @@ target_sources(paddock_midi
     Device.hpp
     Engine.hpp
     errors.hpp
+    eventPrinters.hpp
     events.hpp
 
     pads/KorgPadKontrol.hpp
+    pads/korgPadKontrol/Program.hpp
+    pads/korgPadKontrol/Scene.hpp
+    pads/korgPadKontrol/enums.hpp
+    pads/korgPadKontrol/nativeEvents.hpp
 
   PRIVATE
     Client.cpp
@@ -19,9 +24,10 @@ target_sources(paddock_midi
     errors.cpp
 
     pads/KorgPadKontrol.cpp
-    pads/korgPadKontrol/Scene.hpp
+    pads/korgPadKontrol/Program.cpp
     pads/korgPadKontrol/Scene.cpp
     pads/korgPadKontrol/sysex.hpp
+    pads/korgPadKontrol/nativeEvents.cpp
 )
 
 target_link_libraries(paddock_midi PRIVATE

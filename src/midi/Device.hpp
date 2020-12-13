@@ -46,8 +46,10 @@ public:
 
     // Write the given buffer to the MIDI device
     // @return the number of bytes written or a system error.
-    Expected<size_t> write(std::span<const std::byte> buffer);
-    Expected<size_t> write(const std::vector<std::byte>& buffer);
+    Expected<size_t> write(std::span<const std::byte> buffer,
+                           bool flush = false);
+    Expected<size_t> write(const std::vector<std::byte>& buffer,
+                           bool flush = false);
 
     // Try to read at most as many bytes as the size of the input span.
     // @return the number of bytes read or a system error.

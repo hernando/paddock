@@ -1,6 +1,7 @@
 #include "KorgPadKontrol.hpp"
 
 #include "midi/pads/KorgPadKontrol.hpp"
+#include "midi/pads/korgPadKontrol/Scene.hpp"
 
 #include <QObject>
 
@@ -25,6 +26,11 @@ public:
     std::error_code setMode(midi::KorgPadKontrol::Mode mode)
     {
         return _controller.setMode(mode);
+    }
+
+    Expected<midi::korgPadKontrol::Scene> queryCurrentScene()
+    {
+        return _controller.queryCurrentScene();
     }
 
 private:
@@ -56,6 +62,11 @@ void KorgPadKontrol::setNormalMode()
 {
     if (!_impl->setMode(midi::KorgPadKontrol::Mode::normal))
         emit isNativeChanged();
+}
+
+void KorgPadKontrol::dumpCurrentScene()
+{
+    _impl->queryCurrentScene();
 }
 
 } // namespace paddock

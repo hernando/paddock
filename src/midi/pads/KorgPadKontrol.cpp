@@ -1,6 +1,8 @@
 #include "KorgPadKontrol.hpp"
 
+#include "korgPadKontrol/Program.hpp"
 #include "korgPadKontrol/Scene.hpp"
+#include "korgPadKontrol/nativeEvents.hpp"
 #include "korgPadKontrol/sysex.hpp"
 
 #include "midi/Client.hpp"
@@ -20,8 +22,6 @@
 
 #include <iostream>
 
-#define ECHO
-
 namespace paddock
 {
 namespace midi
@@ -30,7 +30,11 @@ namespace sysex
 {
 using namespace korgPadKontrol::sysex;
 }
+
+using korgPadKontrol::Command;
+using korgPadKontrol::Event;
 using korgPadKontrol::Scene;
+using namespace korgPadKontrol::events;
 
 namespace
 {
@@ -170,7 +174,6 @@ struct PacketCommunicationCmd
     }
 };
 
-
 struct ResetDefaultScene
 {
     static constexpr auto& hostMessage = sysex::resetDefaultScene;
@@ -288,10 +291,10 @@ public:
         {
             POST_AND_CHECK(NativeModeRequest<false>{});
             POST_AND_CHECK(NativeModeRequest<true>{});
-            POST_AND_CHECK(PacketCommunicationCmd{sysex::nativeEnableOutput})
-            POST_AND_CHECK(PacketCommunicationCmd{sysex::nativeModeInit})
-
-            _device->write(sysex::nativeModeTest);
+            POST_AND_CHECK(PacketCommunicationCmd{sysex::nativeEnableOutput});
+            // Until this message is sent, the pad won't send any output.
+            POST_AND_CHECK(PacketCommunicationCmd{
+                sysex::packetCommunicationType2({}, "PAD")});
         }
         else
         {
@@ -300,6 +303,74 @@ public:
         }
 
         return _handShake();
+    }
+
+    void setProgram(korgPadKontrol::Program program)
+    {
+        std::lock_guard<std::mutex> lock(_programMutex);
+        _program = std::move(program);
+    }
+
+    std::future<Expected<bool>> sendNativeCommand(
+        const korgPadKontrol::Command& command)
+    {
+        using korgPadKontrol::LedName;
+        using korgPadKontrol::LedStatus;
+        using namespace korgPadKontrol::events;
+
+        const auto fireAndForget = [this](std::span<const std::byte> message) {
+            std::promise<Expected<bool>> promise;
+            auto result = _device->write(message);
+            if (!result)
+                promise.set_value(tl::unexpected(result.error()));
+            else
+                promise.set_value(true);
+            return promise.get_future();
+        };
+
+        return std::visit(
+            overloaded{[&](const LedOnCommand& command) {
+                           return fireAndForget(sysex::displayLedCommand(
+                               command.led, LedStatus::on, 0));
+                       },
+                       [&](const LedOffCommand& command) {
+                           return fireAndForget(sysex::displayLedCommand(
+                               command.led, LedStatus::off, 0));
+                       },
+                       [&](const BlinkLedCommand& command) {
+                           return fireAndForget(sysex::displayLedCommand(
+                               command.led, LedStatus::blink, 0));
+                       },
+                       [&](const SetAllLedCommand& command) {
+                           return fireAndForget(sysex::packetCommunicationType2(
+                               command.on, command.text));
+                       },
+                       [&](const TriggerLedCommand& command) {
+                           return fireAndForget(sysex::displayLedCommand(
+                               command.led, LedStatus::oneShot,
+                               command.milliseconds / 9));
+                       }},
+            command);
+    }
+
+    Expected<korgPadKontrol::Scene> queryCurrentScene()
+    {
+        auto data = _postCommand(GlobalDataDumpRequest{}).get();
+        // std::cout << "Decoded" << std::endl;
+        // int i = 0;
+        // for (auto byte : std::span{*data}.subspan(9))
+        // {
+        //    printf("%.2X ", int(byte));
+        //    if (++i == 10)
+        //        printf(" ");
+        //    if (i == 20)
+        //    {
+        //        printf("\n");
+        //        i = 0;
+        //    }
+        // }
+        // printf("\n");
+        return _postCommand(CurrentSceneDataDumpRequest{}).get();
     }
 
 private:
@@ -316,6 +387,9 @@ private:
     std::mutex _pendingReplyMutex;
     std::vector<CommandReply> _pendingReplies;
 
+    std::mutex _programMutex;
+    korgPadKontrol::Program _program;
+
     void _deviceInEvent()
     {
         assert(_mode == Mode::native);
@@ -328,14 +402,12 @@ private:
 
     void _decodeMessage(std::span<const std::byte> payload)
     {
-#ifdef ECHO
-        std::cout << "Decoded" << std::endl;
-        for (auto byte : payload)
+        auto event = korgPadKontrol::decodeEvent(payload);
+        if (event)
         {
-            printf("%.2X ", int(byte));
+            std::lock_guard<std::mutex> lock(_programMutex);
+            _program.processEvent(*event, *_client, *_device);
         }
-        printf("\n");
-#endif
 
         std::lock_guard<std::mutex> lock(_pendingReplyMutex);
         _pendingReplies.erase(
@@ -361,16 +433,16 @@ private:
                 return;
             }
 
-            std::visit(overloaded{[](auto&& event) {
-                                      std::cout << event.description
-                                                << std::endl;
-                                  },
-                                  [this](const events::SysEx& event) {
-                                      _decodeMessage(std::span<const std::byte>{
-                                          event.data.begin() + 1,
-                                          event.data.end() - 1});
-                                  }},
-                       *event);
+            std::visit( //
+                overloaded{
+                    [this](auto&& event) {
+                        _program.processEvent(event, *_client);
+                    },
+                    [this](const events::SysEx& event) {
+                        _decodeMessage(std::span<const std::byte>{
+                            event.data.begin() + 1, event.data.end() - 1});
+                    }},
+                *event);
         }
     }
 
@@ -437,7 +509,7 @@ private:
 
         if (auto result = _device->write(command.hostMessage); !result)
         {
-            command.promise.set_value(tl::make_unexpected(result.error()));
+            command.promise.set_value(tl::unexpected(result.error()));
 
             std::lock_guard<std::mutex> lock(_pendingReplyMutex);
             _pendingReplies.pop_back();
@@ -461,7 +533,7 @@ private:
         }
         _pendingReplies.clear();
     }
-};
+}; // namespace paddock
 
 Expected<KorgPadKontrol> KorgPadKontrol::open(Engine* engine,
                                               ClientInfo deviceInfo,
@@ -486,14 +558,30 @@ KorgPadKontrol::KorgPadKontrol(KorgPadKontrol&& other) noexcept = default;
 KorgPadKontrol& KorgPadKontrol::operator=(KorgPadKontrol&& other) noexcept =
     default;
 
+KorgPadKontrol::Mode KorgPadKontrol::mode() const
+{
+    return _impl->mode();
+}
+
 std::error_code KorgPadKontrol::setMode(Mode mode)
 {
     return _impl->setMode(mode);
 }
 
-KorgPadKontrol::Mode KorgPadKontrol::mode() const
+void KorgPadKontrol::setProgram(korgPadKontrol::Program program)
 {
-    return _impl->mode();
+    _impl->setProgram(std::move(program));
+}
+
+std::future<Expected<bool>> KorgPadKontrol::sendNativeCommand(
+    const korgPadKontrol::Command& event)
+{
+    return _impl->sendNativeCommand(event);
+}
+
+Expected<korgPadKontrol::Scene> KorgPadKontrol::queryCurrentScene()
+{
+    return _impl->queryCurrentScene();
 }
 
 } // namespace midi

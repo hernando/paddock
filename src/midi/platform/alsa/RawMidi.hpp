@@ -37,7 +37,8 @@ public:
     RawMidi(const RawMidi& other) = delete;
     RawMidi& operator=(const RawMidi& other) = delete;
 
-    Expected<size_t> write(std::span<const std::byte> buffer);
+    Expected<size_t> write(std::span<const std::byte> buffer,
+                           bool flush = false);
     Expected<size_t> read(std::span<std::byte> buffer);
 
     bool hasAvailableInput() const;

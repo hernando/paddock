@@ -1,5 +1,7 @@
 #pragma once
 
+#include "enums.hpp"
+
 #include "midi/sysex.hpp"
 
 #include "utils/byte.hpp"
@@ -16,8 +18,8 @@ namespace sysex
 {
 constexpr size_t maxMessageSize = 128;
 
-using midi::sysex::START;
 using midi::sysex::END;
+using midi::sysex::START;
 constexpr auto NON_REALTIME_MESSAGE = 0x7E_b;
 constexpr auto GENERAL_INFORMATION = 0x06_b;
 
@@ -79,7 +81,6 @@ constexpr auto WRITE_ERROR            = 0x22_b;
 #define PACKET_COMM_CONTROLLER_DATA_TYPE_1 PACKET_COMM, 0x00_b
 #define PACKET_COMM_CONTROLLER_DATA_TYPE_2 PACKET_COMM, 0x01_b
 
-
 constexpr auto nativeModeOffReq = std::to_array({
     SYSEX_HEADER, NATIVE_MODE_REQ, 0x00_b, 0x00_b, END});
 
@@ -91,15 +92,6 @@ constexpr auto nativeModeOnReq = std::to_array({
 
 constexpr auto nativeModeOnReply = std::to_array({
     SYSEX_HEADER, 0x40_b, 0x00_b, 0x03_b, END});
-
-constexpr auto nativeModeInit = std::to_array({
-    SYSEX_HEADER, PACKET_COMM_HOST_DATA_TYPE_2,
-    0x00_b, 0x00_b, 0x00_b, 0x00_b, 0x00_b, 0x00_b, 0x29_b, 0x29_b, 0x29_b,
-    END});
-
-constexpr auto nativeModeTest = std::to_array({
-    SYSEX_HEADER,
-    DISPLAY_LCD, 0x04_b, 0x00_b, 0x59_b, 0x45_b, 0x53_b, END});
 
 constexpr auto nativeEnableOutput = std::to_array({
     SYSEX_HEADER, PACKET_COMM_HOST_DATA_TYPE_1,
@@ -115,6 +107,11 @@ constexpr auto nativeEnableOutput = std::to_array({
     0x08_b, 0x09_b, 0x0A_b, 0x0B_b, 0x0C_b, 0x0d_b, 0x0E_b, 0x0F_b,
     //40
     0x10_b, END});
+
+constexpr auto nativeModeInit = std::to_array({
+    SYSEX_HEADER, PACKET_COMM_HOST_DATA_TYPE_2,
+    0x00_b, 0x00_b, 0x00_b, 0x00_b, 0x00_b, 0x00_b, 0x29_b, 0x29_b, 0x29_b,
+    END});
 
 constexpr auto inquiryMessageRequest = std::to_array({
     START, NON_REALTIME_MESSAGE, 0x7F_b, 0x06_b, IDENTITY_REQ, END});
@@ -140,18 +137,6 @@ constexpr auto writeCompleted =  std::to_array({
 constexpr auto writeError =  std::to_array({
     SYSEX_HEADER, PACKET_COMM, WRITE_ERROR, 0x00_b, END});
 
-constexpr auto sceneWriteReq(std::byte sceneNumber)
-{
-    return std::to_array({SYSEX_HEADER, DATA_DUMP_REQ, SCENE_WRITE_REQ,
-                          sceneNumber, END});
-}
-
-constexpr auto sceneChangeReq(std::byte sceneNumber)
-{
-    return std::to_array({SYSEX_HEADER, DATA_DUMP_REQ, SCENE_CHANGE_REQ,
-                          sceneNumber, END});
-}
-
 constexpr auto resetDefaultScene =  std::to_array({
     SYSEX_HEADER, 0x7F_b, 0x7F_b, 0x02_b, 0x0A_b, 0x02_b, CURRENT_SCENE_DUMP,
     0x00_b, 0x19_b, 0x19_b, 0x19_b, 0x19_b, 0x19_b, 0x19_b, 0x19_b, 0x00_b,
@@ -172,7 +157,125 @@ constexpr auto resetDefaultScene =  std::to_array({
     0x00_b, 0x00_b, 0x00_b, END});
 
 // clang-format on
+
+constexpr auto sceneWriteReq(std::byte sceneNumber)
+{
+    return std::to_array(
+        {SYSEX_HEADER, DATA_DUMP_REQ, SCENE_WRITE_REQ, sceneNumber, END});
 }
+
+constexpr auto sceneChangeReq(std::byte sceneNumber)
+{
+    return std::to_array(
+        {SYSEX_HEADER, DATA_DUMP_REQ, SCENE_CHANGE_REQ, sceneNumber, END});
 }
+
+constexpr auto displayLedCommand(LedName led, LedStatus status,
+                                 unsigned char timerX9ms)
+{
+    if (timerX9ms > 32)
+        timerX9ms = 31;
+    return std::to_array({SYSEX_HEADER, DISPLAY_LED, std::byte(led),
+                          (std::byte(status) << 5) | std::byte(timerX9ms),
+                          END});
 }
+
+constexpr auto displayLcdCommand(const char text[3], bool blink = false)
+{
+    auto checked = [](unsigned char c) {
+        if (c < 0x20 || c > 0x7F)
+            return 0x20_b;
+        return std::byte{c};
+    };
+
+    return std::to_array({SYSEX_HEADER, DISPLAY_LCD, 0x04_b,
+                          blink ? 0x01_b : 0x00_b, checked(text[0]),
+                          checked(text[1]), checked(text[2]), END});
 }
+
+constexpr auto packetCommunicationType2(std::span<const LedName> onLeds,
+                                        const char text[3])
+{
+    auto message = std::to_array({SYSEX_HEADER, PACKET_COMM_HOST_DATA_TYPE_2,
+                                  0x00_b, 0x00_b, 0x00_b, 0x00_b, 0x00_b,
+                                  0x00_b, 0x00_b, 0x00_b, 0x00_b, END});
+
+    for (auto led : onLeds)
+    {
+        switch (led)
+        {
+        case LedName::pad1:
+        case LedName::pad2:
+        case LedName::pad3:
+        case LedName::pad4:
+        case LedName::pad5:
+        case LedName::pad6:
+        case LedName::pad7:
+            message[8] |= 0x01_b << int(led);
+            break;
+        case LedName::pad8:
+        case LedName::pad9:
+        case LedName::pad10:
+        case LedName::pad11:
+        case LedName::pad12:
+        case LedName::pad13:
+        case LedName::pad14:
+            message[9] |= 0x01_b << (int(led) - int(LedName::pad8));
+            break;
+        case LedName::pad15:
+        case LedName::pad16:
+        case LedName::buttonScene:
+        case LedName::buttonMessage:
+        case LedName::buttonSetting:
+        case LedName::buttonNote:
+        case LedName::buttonMidiCh:
+            message[10] |= 0x01_b << (int(led) - int(LedName::pad15));
+            break;
+        case LedName::buttonSwType:
+        case LedName::buttonRelVal:
+        case LedName::buttonVelocity:
+        case LedName::buttonPort:
+        case LedName::buttonFixedVel:
+        case LedName::buttonProgChange:
+        case LedName::buttonX:
+            message[11] |= 0x01_b << (int(led) - int(LedName::buttonSwType));
+            break;
+        case LedName::buttonY:
+        case LedName::buttonKnob1:
+        case LedName::buttonKnob2:
+        case LedName::buttonPedal:
+        case LedName::buttonRoll:
+        case LedName::buttonFlam:
+        case LedName::buttonHold:
+            message[12] |= 0x01_b << (int(led) - int(LedName::buttonSwType));
+            break;
+        case LedName::led7_0_dot:
+            message[13] |= 0x01_b;
+            break;
+        case LedName::led7_1_dot:
+            message[13] |= 0x02_b;
+            break;
+        case LedName::led7_2_dot:
+            message[13] |= 0x04_b;
+            break;
+        default:; // The 7 segment leds labels are ignored.
+        }
+    }
+
+    auto checked = [](unsigned char c) {
+        if (c < 0x20 || c > 0x7F)
+            return 0x20_b;
+        return std::byte{c};
+    };
+
+    message[14] = checked(text[2]);
+    message[15] = checked(text[1]);
+    message[16] = checked(text[0]);
+
+    return message;
+}
+
+} // namespace sysex
+} // namespace korgPadKontrol
+} // namespace midi
+} // namespace paddock

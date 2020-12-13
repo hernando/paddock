@@ -4,6 +4,7 @@
         <file>Paddock/ControllerLayout.qml</file>
         <file>Paddock/MainWindow.qml</file>
         <file>Paddock/MenuBar.qml</file>
+        <file>Paddock/MenuItem.qml</file>
         <file>Paddock/Controls/qmldir</file>
         <file>Paddock/Controls/Pad.qml</file>
         <file>Paddock/Pads/qmldir</file>
