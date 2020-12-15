@@ -402,9 +402,10 @@ using QueueTypes =
               Clock, Tick, QueueSkew, SyncPosition>;
 using Queue = mp::apply<std::variant, QueueTypes>;
 
-using ClientPortTypes = mp::Types<ClientStart, ClientExit, ClientChange, PortStart, PortExit,
-                                  PortChange, PortSubscribed, PortUnsubscribed>;
-using ClientPort = mp::apply<std::variant, QueueTypes>;
+using EngineTypes =
+    mp::Types<ClientStart, ClientExit, ClientChange, PortStart, PortExit,
+              PortChange, PortSubscribed, PortUnsubscribed>;
+using EngineEvent = mp::apply<std::variant, QueueTypes>;
 
 using UserTypes = mp::Types<User, UserVariable>;
 using UserEvent = mp::apply<std::variant, UserTypes>;
@@ -415,7 +416,7 @@ using SystemEvent = mp::apply<std::variant, SystemTypes>;
 using MiscTypes =
     mp::Types<TuneRequest, Reset, ActiveSensing, Echo, Bounce, None, Unknown>;
 
-using AllTypes = mp::join<VoiceTypes, ControlTypes, QueueTypes, ClientPortTypes,
+using AllTypes = mp::join<VoiceTypes, ControlTypes, QueueTypes, EngineTypes,
                           UserTypes, SystemTypes, MiscTypes>;
 
 using Event = mp::apply<std::variant, AllTypes>;

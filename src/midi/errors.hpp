@@ -16,7 +16,8 @@ enum class DeviceError
 
 enum class EngineError
 {
-    noEngineAvailable = 1,
+    initializationFailed = 1,
+    noEngineAvailable,
     noDeviceFound
 };
 

@@ -51,6 +51,8 @@ class MidiEngineErrorCategory : public std::error_category
         using Error = EngineError;
         switch (static_cast<Error>(code))
         {
+        case Error::initializationFailed:
+            return "MIDI engine initialization failed";
         case Error::noEngineAvailable:
             return "No MIDI engine available";
         case Error::noDeviceFound:

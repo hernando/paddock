@@ -134,13 +134,13 @@ tl::expected<Sequencer, std::error_code> Sequencer::open(
 
 Sequencer::Sequencer(Handle handle, ClientInfo info)
     : _handle{std::move(handle)}
-    , _clientInfo(std::move(info))
-    , _inPollHandle(_clientInfo.inputs.size()
+    , _clientInfo{std::move(info)}
+    , _inPollHandle{_clientInfo.inputs.size()
                         ? getPollDescriptor(_handle.get(), POLLIN)
-                        : core::PollHandle{})
-    , _outPollHandle(_clientInfo.outputs.size()
+                        : core::PollHandle{}}
+    , _outPollHandle{_clientInfo.outputs.size()
                          ? getPollDescriptor(_handle.get(), POLLOUT)
-                         : core::PollHandle{})
+                         : core::PollHandle{}}
 {
 }
 

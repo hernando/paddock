@@ -1,5 +1,7 @@
 #include "Engine.hpp"
 
+#include "midi/errors.hpp"
+
 #include <alsa/asoundlib.h>
 
 #include <map>
@@ -75,7 +77,7 @@ ClientId makeClientId(snd_seq_client_info_t* info)
     return std::shared_ptr<void>(copy, snd_seq_client_info_free);
 }
 
-std::shared_ptr<snd_seq_client_info_t> getClientInfo(ClientId clientId)
+std::shared_ptr<snd_seq_client_info_t> getClientInfo(const ClientId& clientId)
 {
     return std::static_pointer_cast<snd_seq_client_info_t>(clientId);
 }
@@ -177,20 +179,22 @@ PortNameToDeviceMap getHwMidiDevices()
     return portToDevice;
 }
 
-ClientInfo makeClientInfo(snd_seq_t* handle, snd_seq_client_info_t* info,
+ClientInfo makeClientInfo(snd_seq_t* handle, ClientId clientId,
                           const PortNameToDeviceMap& portToDevice)
 {
     ClientInfo result;
-    result.name = snd_seq_client_info_get_name(info);
-    result.type = getClientType(info);
-    result.id = makeClientId(info);
+    auto info = getClientInfo(clientId);
 
-    auto clientId = snd_seq_client_info_get_client(info);
-    auto numPorts = snd_seq_client_info_get_num_ports(info);
+    result.name = snd_seq_client_info_get_name(info.get());
+    result.type = getClientType(info.get());
+    result.id = std::move(clientId);
+
+    auto alsaClientId = snd_seq_client_info_get_client(info.get());
+    auto numPorts = snd_seq_client_info_get_num_ports(info.get());
 
     for (int i = 0; i < numPorts; ++i)
     {
-        auto portInfo = getPortInfo(handle, clientId, i);
+        auto portInfo = getPortInfo(handle, alsaClientId, i);
 
         if (!portInfo)
             continue;
@@ -220,9 +224,59 @@ ClientInfo makeClientInfo(snd_seq_t* handle, snd_seq_client_info_t* info,
     }
     return result;
 }
+
+std::shared_ptr<void> getPollDescriptor(snd_seq_t* client)
+{
+    // This function return always 1 if events has either POLLIN or POLLOUT.
+    // Let's assume that's the case, but throw if it's not.
+    if (snd_seq_poll_descriptors_count(client, POLLIN) != 1)
+        throw std::logic_error("Poll descriptors is not 1");
+
+    auto fd = std::make_shared<pollfd>();
+    // No need to check the return value, it must be one.
+    snd_seq_poll_descriptors(client, fd.get(), 1, POLLIN);
+    return std::static_pointer_cast<void>(fd);
+}
 } // namespace
 
-Expected<Sequencer> Engine::openClient(const char* name, PortDirection direction)
+Expected<Engine> Engine::create()
+{
+    snd_seq_t* handle;
+    if (snd_seq_open(&handle, "default", SND_SEQ_OPEN_DUPLEX, 0) == -1)
+        return tl::make_unexpected(EngineError::initializationFailed);
+
+    return Engine(Handle(handle, snd_seq_close));
+}
+
+Engine::Engine(Handle handle)
+    : _handle{std::move(handle)}
+    , _pollHandle{getPollDescriptor(_handle.get())}
+{
+    snd_seq_client_info_t* info;
+    snd_seq_client_info_alloca(&info);
+
+    snd_seq_get_client_info(_handle.get(), info);
+    auto thisId = snd_seq_client_info_get_client(info);
+
+    snd_seq_client_info_set_client(info, -1);
+
+    while (snd_seq_query_next_client(_handle.get(), info) >= 0)
+    {
+        auto id = snd_seq_client_info_get_client(info);
+        if (id == thisId)
+            continue;
+
+        _clients.push_back(std::make_tuple(id, makeClientId(info)));
+    }
+}
+
+Engine::Engine(Engine&& other) noexcept = default;
+Engine& Engine::operator=(Engine&& other) noexcept = default;
+
+Engine::~Engine() = default;
+
+Expected<Sequencer> Engine::openClient(const char* name,
+                                       PortDirection direction)
 {
     return Sequencer::open(name, direction);
 }
@@ -231,31 +285,13 @@ std::vector<ClientInfo> Engine::queryClientInfos() const
 {
     const auto portToDevice = getHwMidiDevices();
 
-    snd_seq_t* handle;
-    if (snd_seq_open(&handle, "default", SND_SEQ_OPEN_DUPLEX, 0) == -1)
-        return {};
-
-    snd_seq_client_info_t* info;
-    snd_seq_client_info_alloca(&info);
-
-    snd_seq_get_client_info(handle, info);
-    auto thisId = snd_seq_client_info_get_client(info);
-
-    snd_seq_client_info_set_client(info, -1);
-
-    std::vector<ClientInfo> clientInfos;
-
-    while (snd_seq_query_next_client(handle, info) >= 0)
+    std::vector<ClientInfo> result;
+    for (const auto& client : _clients)
     {
-        if (snd_seq_client_info_get_client(info) == thisId)
-            continue;
-
-        clientInfos.push_back(makeClientInfo(handle, info, portToDevice));
+        result.push_back(makeClientInfo(
+            _handle.get(), std::get<ClientId>(client), portToDevice));
     }
-
-    snd_seq_close(handle);
-
-    return clientInfos;
+    return result;
 }
 
 std::optional<ClientInfo> Engine::queryClientInfo(const ClientId& id) const
@@ -270,7 +306,7 @@ std::optional<ClientInfo> Engine::queryClientInfo(const ClientId& id) const
     auto clientInfo = getClientInfo(id);
     // This function may return old data if the client has been disconnected
     // Since the ClientId pointer was created.
-    return makeClientInfo(handle, clientInfo.get(), getHwMidiDevices());
+    return makeClientInfo(handle, std::move(clientInfo), getHwMidiDevices());
 }
 
 } // namespace alsa

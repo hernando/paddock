@@ -83,9 +83,12 @@ private:
 Expected<Engine> Engine::create()
 {
 #if PADDOCK_USE_ALSA
-    return Engine{Model{alsa::Engine{}}};
+    return alsa::Engine::create().and_then(
+        [](alsa::Engine&& engine) -> Expected<Engine> {
+            return Engine{Model{std::move(engine)}};
+        });
 #else
-    return make_error_code(EngineError::noEngineAvailable);
+    return tl::make_unexpected(EngineError::noEngineAvailable);
 #endif
 }
 

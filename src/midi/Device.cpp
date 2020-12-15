@@ -1,5 +1,6 @@
 #include "Device.hpp"
 
+#include "midi/errors.hpp"
 #include "platform/alsa/RawMidi.hpp"
 
 namespace paddock
@@ -62,7 +63,7 @@ Expected<Device> Device::open(const char* name, PortDirection direction)
             return Device{Model{std::move(device)}};
         });
 #else
-    return make_error_code(Error::NoImplementationAvailable);
+    return tl::make_unexpected(DeviceError::noImplementationAvailable);
 #endif
 }
 
