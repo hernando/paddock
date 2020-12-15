@@ -40,7 +40,7 @@ std::optional<Event> decodeEvent(std::span<const std::byte> message)
     {
         SwitchOutput event;
         event.name = Switch(payload[0]);
-        event.on = payload[1] == 0x7F_b;
+        event.pressed = payload[1] == 0x7F_b;
         return event;
     }
     case KNOB_OUTPUT:

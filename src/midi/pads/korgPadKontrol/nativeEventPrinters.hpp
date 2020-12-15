@@ -33,7 +33,8 @@ std::ostream& operator<<(std::ostream& out, const WheelOutput& event)
 
 std::ostream& operator<<(std::ostream& out, const SwitchOutput& event)
 {
-    out << "Switch " << int(event.name) << (event.on ? " on" : " off");
+    out << "Switch " << int(event.name)
+        << (event.pressed ? " pressed" : " released");
     return out;
 }
 
@@ -54,7 +55,7 @@ std::ostream& operator<<(std::ostream& out, const Event& event)
     std::visit([&out](auto&& event) { out << event; }, event);
     return out;
 }
-}
+} // namespace events
 } // namespace korgPadKontrol
 } // namespace midi
 } // namespace paddock

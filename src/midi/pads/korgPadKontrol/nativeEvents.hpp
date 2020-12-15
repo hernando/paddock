@@ -65,7 +65,7 @@ struct WheelOutput
 struct SwitchOutput
 {
     Switch name;
-    bool on;
+    bool pressed;
 };
 
 struct KnobOutput
