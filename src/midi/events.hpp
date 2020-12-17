@@ -254,63 +254,6 @@ struct SyncPosition
     // event data type = snd_seq_ev_queue_control_t
 };
 
-// Client/Port event
-
-// TODO: move client/port handling to the Engine class
-
-struct ClientStart
-{
-    static constexpr auto description = "New client has connected";
-    unsigned char client;
-};
-
-struct ClientExit
-{
-    static constexpr auto description = "Client has left the system";
-    unsigned char client;
-};
-
-struct ClientChange
-{
-    static constexpr auto description = "Client status/info has changed";
-    unsigned char client;
-};
-
-struct Address
-{
-    unsigned char client;
-    unsigned char port;
-};
-
-struct PortStart : public Address
-{
-    static constexpr auto description = "New port was created";
-};
-
-struct PortExit : public Address
-{
-    static constexpr auto description = "Port was deleted from system";
-};
-
-struct PortChange : public Address
-{
-    static constexpr auto description = "Port status/info has changed";
-};
-
-struct PortSubscribed
-{
-    static constexpr auto description = "Ports connected";
-    Address source;
-    Address destination;
-};
-
-struct PortUnsubscribed
-{
-    static constexpr auto description = "Ports disconnected";
-    Address source;
-    Address destination;
-};
-
 // User events
 
 struct User
@@ -402,11 +345,6 @@ using QueueTypes =
               Clock, Tick, QueueSkew, SyncPosition>;
 using Queue = mp::apply<std::variant, QueueTypes>;
 
-using EngineTypes =
-    mp::Types<ClientStart, ClientExit, ClientChange, PortStart, PortExit,
-              PortChange, PortSubscribed, PortUnsubscribed>;
-using EngineEvent = mp::apply<std::variant, QueueTypes>;
-
 using UserTypes = mp::Types<User, UserVariable>;
 using UserEvent = mp::apply<std::variant, UserTypes>;
 
@@ -416,10 +354,72 @@ using SystemEvent = mp::apply<std::variant, SystemTypes>;
 using MiscTypes =
     mp::Types<TuneRequest, Reset, ActiveSensing, Echo, Bounce, None, Unknown>;
 
-using AllTypes = mp::join<VoiceTypes, ControlTypes, QueueTypes, EngineTypes,
+using MidiTypes = mp::join<VoiceTypes, ControlTypes, QueueTypes,
                           UserTypes, SystemTypes, MiscTypes>;
 
-using Event = mp::apply<std::variant, AllTypes>;
+using Event = mp::apply<std::variant, MidiTypes>;
+
+// MIDI engine events
+
+// TODO: move client/port handling to the Engine class
+
+struct ClientStart
+{
+    static constexpr auto description = "New client has connected";
+    ClientId client;
+};
+
+struct ClientExit
+{
+    static constexpr auto description = "Client has left the system";
+    ClientId client;
+};
+
+struct ClientChange
+{
+    static constexpr auto description = "Client status/info has changed";
+    ClientId client;
+};
+
+struct Address
+{
+    ClientId client;
+    unsigned char port;
+};
+
+struct PortStart : public Address
+{
+    static constexpr auto description = "New port was created";
+};
+
+struct PortExit : public Address
+{
+    static constexpr auto description = "Port was deleted from system";
+};
+
+struct PortChange : public Address
+{
+    static constexpr auto description = "Port status/info has changed";
+};
+
+struct PortSubscribed
+{
+    static constexpr auto description = "Ports connected";
+    Address source;
+    Address destination;
+};
+
+struct PortUnsubscribed
+{
+    static constexpr auto description = "Ports disconnected";
+    Address source;
+    Address destination;
+};
+
+using EngineTypes =
+    mp::Types<ClientStart, ClientExit, ClientChange, PortStart, PortExit,
+              PortChange, PortSubscribed, PortUnsubscribed>;
+using EngineEvent = mp::apply<std::variant, EngineTypes>;
 
 } // namespace events
 } // namespace midi

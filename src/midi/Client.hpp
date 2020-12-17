@@ -13,8 +13,6 @@ namespace paddock
 {
 namespace midi
 {
-using ClientId = std::shared_ptr<void>;
-
 struct ClientInfo
 {
     std::string name;

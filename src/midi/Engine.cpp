@@ -8,9 +8,14 @@
 #include "platform/alsa/Engine.hpp"
 #include "platform/alsa/Sequencer.hpp"
 
+#include "core/Log.hpp"
 #include "core/Poller.hpp"
 
+#include "utils/overloaded.hpp"
+
 #include <thread>
+
+#include <iostream>
 
 namespace paddock
 {
@@ -38,10 +43,19 @@ public:
         _poller.add(std::move(handle), std::move(callback));
     }
 
-    std::future<void> remove(const core::PollHandle&& handle)
+    std::future<void> remove(const core::PollHandle& handle)
     {
         return _poller.remove(handle);
     }
+
+    void setEngineEventCallback(EngineEventCallback callback)
+    {
+        _eventCallback = std::move(callback);
+    }
+
+protected:
+    std::mutex _eventCallbackMutex;
+    EngineEventCallback _eventCallback;
 
 private:
     core::Poller _poller;
@@ -54,7 +68,22 @@ public:
     Model(T engine)
         : _engine(std::move(engine))
     {
+        auto handle = _engine.pollHandle();
+        if (handle)
+        {
+            add(std::move(handle),
+                [this](const void*, int) { _processClientEvents(); });
+        }
     }
+
+    ~Model()
+    {
+        auto handle = _engine.pollHandle();
+        if (handle)
+            remove(handle).wait();
+    }
+
+    Model(Model&& other) = default;
 
     std::vector<ClientInfo> queryClientInfos() const final
     {
@@ -78,6 +107,31 @@ public:
 
 private:
     T _engine;
+
+    void _processClientEvents()
+    {
+        while (_engine.hasEvents())
+        {
+            const auto event = _engine.readEvent();
+            if (!event)
+            {
+                core::log() << event.error().message();
+                return;
+            }
+
+            {
+                std::unique_lock<std::mutex> lock(_eventCallbackMutex);
+                if (_eventCallback)
+                    _eventCallback(*event);
+            }
+
+            std::visit(overloaded{[this](auto&& event) {
+                           std::cout << "Engine handler " << event.description
+                                     << std::endl;
+                       }},
+                       *event);
+        }
+    }
 };
 
 Expected<Engine> Engine::create()
@@ -85,7 +139,7 @@ Expected<Engine> Engine::create()
 #if PADDOCK_USE_ALSA
     return alsa::Engine::create().and_then(
         [](alsa::Engine&& engine) -> Expected<Engine> {
-            return Engine{Model{std::move(engine)}};
+            return Engine{std::move(engine)};
         });
 #else
     return tl::make_unexpected(EngineError::noEngineAvailable);
@@ -93,8 +147,8 @@ Expected<Engine> Engine::create()
 }
 
 template <typename T>
-Engine::Engine(Model<T> impl)
-    : _impl(new Model<T>(std::move(impl)))
+Engine::Engine(T&& engine)
+    : _impl{new Model{std::move(engine)}}
 {
 }
 
@@ -141,6 +195,11 @@ void Engine::add(core::PollHandle handle, core::PollCallback callback)
 std::future<void> Engine::remove(const core::PollHandle& handle)
 {
     return _impl->remove(std::move(handle));
+}
+
+void Engine::setEngineEventCallback(EngineEventCallback callback)
+{
+    return _impl->setEngineEventCallback(callback);
 }
 
 } // namespace midi

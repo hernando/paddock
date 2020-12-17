@@ -184,6 +184,18 @@ std::error_code Sequencer::connectInput(const ClientInfo& source,
     if (snd_seq_subscribe_port(_handle.get(), subs) == -1)
         return Error::portSubscriptionFailed;
 
+//    sender.client = SND_SEQ_CLIENT_SYSTEM;
+//    sender.port = SND_SEQ_PORT_SYSTEM_ANNOUNCE;
+//    dest.client = snd_seq_client_id(_handle.get());
+//    dest.port = _clientInfo.inputs[0].number;
+//    snd_seq_port_subscribe_set_sender(subs, &sender);
+//    snd_seq_port_subscribe_set_dest(subs, &dest);
+//    snd_seq_port_subscribe_set_queue(subs, 1);
+//    snd_seq_port_subscribe_set_time_update(subs, 1);
+//    snd_seq_port_subscribe_set_time_real(subs, 1);
+//    if (snd_seq_subscribe_port(_handle.get(), subs) == -1)
+//        return Error::portSubscriptionFailed;
+
     // TODO check errors;
     return std::error_code{};
 }
@@ -215,12 +227,12 @@ bool Sequencer::hasEvents() const
 Expected<events::Event> Sequencer::readEvent()
 {
     snd_seq_event_t* event;
-    // This result should tell us if there are evens remaining in the buffer
+    // This result should tell us if there are events remaining in the buffer
     // but in reality it always returns 1 in case of success
     auto result = snd_seq_event_input(_handle.get(), &event);
     if (result < 0)
         return tl::make_unexpected(Error::readEventFailed);
-    return makeEvent(event, _handle.get());
+    return makeEvent(event);
 }
 
 std::error_code Sequencer::postEvent(const events::Event& event)

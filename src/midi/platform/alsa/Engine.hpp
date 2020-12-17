@@ -6,6 +6,7 @@
 #include "midi/events.hpp"
 
 #include <optional>
+#include <mutex>
 
 namespace paddock
 {
@@ -13,6 +14,8 @@ namespace midi
 {
 namespace alsa
 {
+using ClientIds = std::tuple<int, ClientId>;
+
 class Engine
 {
 public:
@@ -21,10 +24,10 @@ public:
     ~Engine();
 
     Engine(Engine&& other) noexcept;
-    Engine& operator=(Engine&& other) noexcept;
 
     Engine(const Engine& other) = delete;
     Engine& operator=(const Engine& other) = delete;
+    Engine& operator=(Engine&& other) = delete;
 
     Expected<Sequencer> openClient(const char* name, PortDirection direction);
 
@@ -44,9 +47,14 @@ private:
     Handle _handle;
     std::shared_ptr<void> _pollHandle;
 
-    std::vector<std::tuple<int, ClientId>> _clients;
+    mutable std::mutex _clientMutex;
+    std::vector<ClientIds> _clients;
+    mutable std::optional<Expected<events::EngineEvent>> _nextEvent;
 
     Engine(Handle handle);
+    std::optional<Expected<events::EngineEvent>> _extractEvent() const;
+    void _processEvent(const events::EngineEvent& event);
+    void _updateClientInfo(const ClientId& id);
 };
 } // namespace alsa
 } // namespace midi

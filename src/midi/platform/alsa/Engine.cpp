@@ -1,10 +1,16 @@
 #include "Engine.hpp"
+#include "events.hpp"
+#include "utils.hpp"
 
 #include "midi/errors.hpp"
+
+#include "utils/overloaded.hpp"
 
 #include <alsa/asoundlib.h>
 
 #include <map>
+
+#include <iostream>
 
 namespace paddock
 {
@@ -68,18 +74,14 @@ std::optional<PortInfo> getPortInfo(snd_seq_t* handle, int client, int port)
     return portInfo;
 }
 
-ClientId makeClientId(snd_seq_client_info_t* info)
-{
-    snd_seq_client_info_t* copy;
-    if (snd_seq_client_info_malloc(&copy) == -1)
-        throw std::bad_alloc();
-    snd_seq_client_info_copy(copy, info);
-    return std::shared_ptr<void>(copy, snd_seq_client_info_free);
-}
-
 std::shared_ptr<snd_seq_client_info_t> getClientInfo(const ClientId& clientId)
 {
     return std::static_pointer_cast<snd_seq_client_info_t>(clientId);
+}
+
+int getAlsaClientId(const ClientId& clientId)
+{
+    return snd_seq_client_info_get_client(getClientInfo(clientId).get());
 }
 
 struct HwPortInfo
@@ -237,6 +239,23 @@ std::shared_ptr<void> getPollDescriptor(snd_seq_t* client)
     snd_seq_poll_descriptors(client, fd.get(), 1, POLLIN);
     return std::static_pointer_cast<void>(fd);
 }
+
+void removeClient(ClientId id, std::vector<ClientIds>& clients)
+{
+    if (!id)
+        return;
+    clients.erase(std::find_if(
+        clients.begin(), clients.end(),
+        [&id](const ClientIds& ids) { return std::get<ClientId>(ids) == id; }));
+}
+
+bool isValid(const ClientId& id)
+{
+    if (!id)
+        return false;
+    return snd_seq_client_info_get_type(getClientInfo(id).get()) != 0;
+}
+
 } // namespace
 
 Expected<Engine> Engine::create()
@@ -244,6 +263,28 @@ Expected<Engine> Engine::create()
     snd_seq_t* handle;
     if (snd_seq_open(&handle, "default", SND_SEQ_OPEN_DUPLEX, 0) == -1)
         return tl::make_unexpected(EngineError::initializationFailed);
+
+    int port = snd_seq_create_simple_port(
+        handle, "input", SND_SEQ_PORT_CAP_WRITE | SND_SEQ_PORT_CAP_SUBS_WRITE,
+        SND_SEQ_PORT_TYPE_APPLICATION);
+
+    snd_seq_addr_t sender;
+    sender.client = SND_SEQ_CLIENT_SYSTEM;
+    sender.port = SND_SEQ_PORT_SYSTEM_ANNOUNCE;
+
+    snd_seq_addr_t dest;
+    dest.client = snd_seq_client_id(handle);
+    dest.port = port;
+
+    snd_seq_port_subscribe_t* subs;
+    snd_seq_port_subscribe_alloca(&subs);
+    snd_seq_port_subscribe_set_sender(subs, &sender);
+    snd_seq_port_subscribe_set_dest(subs, &dest);
+    snd_seq_port_subscribe_set_queue(subs, 1);
+    snd_seq_port_subscribe_set_time_update(subs, 1);
+    snd_seq_port_subscribe_set_time_real(subs, 1);
+    if (snd_seq_subscribe_port(handle, subs) == -1)
+        std::cerr << "Error subscribing port" << std::endl;
 
     return Engine(Handle(handle, snd_seq_close));
 }
@@ -270,8 +311,14 @@ Engine::Engine(Handle handle)
     }
 }
 
-Engine::Engine(Engine&& other) noexcept = default;
-Engine& Engine::operator=(Engine&& other) noexcept = default;
+Engine::Engine(Engine&& other) noexcept
+    : _handle(std::move(other._handle))
+    , _pollHandle(std::move(other._pollHandle))
+{
+    std::unique_lock<std::mutex> lock(_clientMutex);
+    _clients = std::move(other._clients);
+    _nextEvent = std::move(other._nextEvent);
+}
 
 Engine::~Engine() = default;
 
@@ -283,11 +330,16 @@ Expected<Sequencer> Engine::openClient(const char* name,
 
 std::vector<ClientInfo> Engine::queryClientInfos() const
 {
+    std::unique_lock<std::mutex> lock(_clientMutex);
     const auto portToDevice = getHwMidiDevices();
 
     std::vector<ClientInfo> result;
+
     for (const auto& client : _clients)
     {
+        if (!isValid(std::get<ClientId>(client)))
+            continue;
+
         result.push_back(makeClientInfo(
             _handle.get(), std::get<ClientId>(client), portToDevice));
     }
@@ -296,17 +348,125 @@ std::vector<ClientInfo> Engine::queryClientInfos() const
 
 std::optional<ClientInfo> Engine::queryClientInfo(const ClientId& id) const
 {
-    if (!id)
+    if (!isValid(id))
         return {};
 
-    snd_seq_t* handle;
-    if (snd_seq_open(&handle, "default", SND_SEQ_OPEN_DUPLEX, 0) == -1)
-        return {};
+    // Check if the client if still in the list
+    {
+        std::unique_lock<std::mutex> lock(_clientMutex);
+        if (std::find_if(_clients.begin(), _clients.end(),
+                         [&id](const ClientIds& ids) {
+                             return std::get<ClientId>(ids) == id;
+                         }) == _clients.end())
+        {
+            return std::nullopt;
+        }
+    }
 
     auto clientInfo = getClientInfo(id);
-    // This function may return old data if the client has been disconnected
-    // Since the ClientId pointer was created.
-    return makeClientInfo(handle, std::move(clientInfo), getHwMidiDevices());
+    // This function may still return old data if the client has been
+    // disconnected between the verification above and they data query here
+    return makeClientInfo(_handle.get(), std::move(clientInfo),
+                          getHwMidiDevices());
+}
+
+std::shared_ptr<void> Engine::pollHandle() const
+{
+    return _pollHandle;
+}
+
+bool Engine::hasEvents() const
+{
+    // We want to return true only if the next event is an engine event.
+    // That means we need to read it.
+    while (true)
+    {
+        if (snd_seq_event_input_pending(_handle.get(), 1) <= 0)
+            return false;
+
+        std::unique_lock<std::mutex> lock(_clientMutex);
+        auto event = _extractEvent();
+        if (event)
+        {
+            _nextEvent = std::move(event);
+            return true;
+        }
+    }
+}
+
+Expected<events::EngineEvent> Engine::readEvent()
+{
+    std::unique_lock<std::mutex> lock(_clientMutex);
+    if (_nextEvent)
+    {
+        auto event = std::move(*_nextEvent);
+        _nextEvent = std::nullopt;
+        if (event)
+            _processEvent(*event);
+        return event;
+    }
+
+    while (true)
+    {
+        if (auto event = _extractEvent())
+        {
+            if (event.value())
+                _processEvent(**event);
+            return std::move(*event);
+        }
+    }
+}
+
+std::optional<Expected<events::EngineEvent>> Engine::_extractEvent() const
+{
+    snd_seq_event_t* event;
+    // This result should tell us if there are events remaining in the buffer
+    // but in reality it always returns 1 in case of success
+    auto result = snd_seq_event_input(_handle.get(), &event);
+    if (result < 0)
+        return tl::make_unexpected(EngineError::readEventFailed);
+    return makeEvent(event, const_cast<snd_seq_t*>(_handle.get()), _clients);
+}
+
+void Engine::_processEvent(const events::EngineEvent& event)
+{
+    std::visit(overloaded{[this](const events::ClientChange& event) {
+                              _updateClientInfo(event.client);
+                          },
+                          [this](const events::ClientStart& event) {
+                              _clients.push_back(std::make_tuple(
+                                  getAlsaClientId(event.client), event.client));
+                          },
+                          [this](const events::ClientExit& event) {
+                              removeClient(event.client, _clients);
+                          },
+                          [this](const events::PortChange& event) {
+                              _updateClientInfo(event.client);
+                          },
+                          [this](const events::PortExit& event) {
+                              _updateClientInfo(event.client);
+                          },
+                          [this](const events::PortStart& event) {
+                              _updateClientInfo(event.client);
+                          },
+                          [this](auto&&) {}},
+               event);
+}
+
+void Engine::_updateClientInfo(const ClientId& id)
+{
+    for (auto client : _clients)
+    {
+        if (std::get<ClientId>(client) != id)
+            continue;
+
+        snd_seq_client_info_t* info;
+        snd_seq_client_info_alloca(&info);
+        snd_seq_get_any_client_info(_handle.get(), std::get<int>(client), info);
+        auto oldInfo = getClientInfo(std::get<ClientId>(client));
+        snd_seq_client_info_copy(oldInfo.get(), info);
+        break;
+    }
 }
 
 } // namespace alsa

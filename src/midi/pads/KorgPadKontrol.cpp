@@ -20,8 +20,6 @@
 #include <cassert>
 #include <mutex>
 
-#include <iostream>
-
 namespace paddock
 {
 namespace midi
@@ -390,7 +388,7 @@ private:
     std::mutex _programMutex;
     korgPadKontrol::Program _program;
 
-    void _deviceInEvent()
+    void _processDeviceEvents()
     {
         assert(_mode == Mode::native);
         _tokenizer.processInput(
@@ -422,7 +420,7 @@ private:
             _pendingReplies.end());
     }
 
-    void _clientInEvent()
+    void _processClientEvents()
     {
         while (_client->hasEvents())
         {
@@ -434,14 +432,14 @@ private:
             }
 
             std::visit( //
-                overloaded{
-                    [this](auto&& event) {
-                        _program.processEvent(event, *_client);
-                    },
-                    [this](const events::SysEx& event) {
-                        _decodeMessage(std::span<const std::byte>{
-                            event.data.begin() + 1, event.data.end() - 1});
-                    }},
+                overloaded{[this](auto&& event) {
+                               _program.processEvent(event, *_client);
+                           },
+                           [this](const events::SysEx& event) {
+                               _decodeMessage(std::span<const std::byte>{
+                                   event.data.begin() + 1,
+                                   event.data.end() - 1});
+                           }},
                 *event);
         }
     }
@@ -452,7 +450,9 @@ private:
         {
             _tokenizer.reset(&*_device);
 
-            auto callback = [this](const void*, int) { _deviceInEvent(); };
+            auto callback = [this](const void*, int) {
+                _processDeviceEvents();
+            };
             if (auto handle = _device->pollHandle(PollEvents::in))
             {
                 _engine->add(handle, callback);
@@ -460,7 +460,9 @@ private:
         }
         if (_client)
         {
-            auto callback = [this](const void*, int) { _clientInEvent(); };
+            auto callback = [this](const void*, int) {
+                _processClientEvents();
+            };
             if (auto handle = _client->pollHandle(PollEvents::in))
             {
                 _engine->add(handle, callback);

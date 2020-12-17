@@ -46,6 +46,8 @@ if(PADDOCK_USE_ALSA)
     platform/alsa/Sequencer.cpp
     platform/alsa/events.hpp
     platform/alsa/events.cpp
+    platform/alsa/utils.hpp
+    platform/alsa/utils.cpp
   )
 
   target_link_libraries(paddock_midi

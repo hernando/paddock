@@ -17,6 +17,10 @@ namespace midi
 class AbstractEngine;
 class ClientInfo;
 
+// Callback to be called when a MIDI engine event is announced by
+// the system. Will be called from another thread.
+using EngineEventCallback = std::function<void(const events::EngineEvent&)>;
+
 class Engine
 {
 public:
@@ -49,11 +53,13 @@ public:
     void add(core::PollHandle handle, core::PollCallback callback);
     std::future<void> remove(const core::PollHandle& handle);
 
+    void setEngineEventCallback(EngineEventCallback callback);
+
 private:
     std::unique_ptr<AbstractEngine> _impl;
 
     template <typename T>
-    Engine(Model<T> impl);
+    Engine(T&& engine);
 };
 
 } // namespace midi

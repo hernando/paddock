@@ -53,6 +53,8 @@ class MidiEngineErrorCategory : public std::error_category
         {
         case Error::initializationFailed:
             return "MIDI engine initialization failed";
+        case Error::readEventFailed:
+            return "Error readng MIDI engine event";
         case Error::noEngineAvailable:
             return "No MIDI engine available";
         case Error::noDeviceFound:
