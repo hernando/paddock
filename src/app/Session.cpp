@@ -7,17 +7,19 @@
 #include "utils.hpp"
 
 #include "midi/Engine.hpp"
+#include "midi/errors.hpp"
 #include "midi/pads/KorgPadKontrol.hpp"
 
 #include "core/Log.hpp"
 #include "core/Program.hpp"
 
+#include "utils/overloaded.hpp"
+
 #ifdef PADDOCK_USE_LIBLO
 #include "core/NsmSession.hpp"
 #endif
 
-#include <iostream>
-#include <optional>
+#include <QTimer>
 
 namespace paddock
 {
@@ -80,7 +82,8 @@ public:
     {
         // We need to ensure the controller is destroyed before the engine.
         if (_padController)
-            std::visit([](auto controller) { delete controller; }, *_padController);
+            std::visit([](auto controller) { delete controller; },
+                       *_padController);
     }
 
     bool hasSession() const { return _nsmSession.has_value(); }
@@ -116,11 +119,16 @@ public:
 
     std::error_code initMidi()
     {
-        auto engine = paddock::midi::Engine::create();
+        auto engine = midi::Engine::create();
         if (!engine)
             return engine.error();
 
         _midiEngine = std::move(*engine);
+        _midiEngine->setEngineEventCallback(
+            [this](const midi::events::EngineEvent& event) {
+                execInMainThreadAsync(
+                    [this, event] { _processEngineEvent(event); });
+            });
 
         // TODO: Implement Client/Port detection changes
         auto controller = makePad(_parent, &*_midiEngine, name());
@@ -158,7 +166,7 @@ public:
         connect(_program, &core::Program::dirtyChanged,
                 [this]() { this->sendDirty(_program->dirty()); });
 
-        Q_EMIT _parent->programChanged();
+        emit _parent->programChanged();
         return std::error_code{}; // success
     }
 
@@ -174,7 +182,84 @@ private:
     std::string _filePath;
     std::optional<core::NsmSession> _nsmSession;
     std::string _name{"Paddock"};
-};
+
+    void _processEngineEvent(const midi::events::EngineEvent& event)
+    {
+        using namespace midi::events;
+        std::visit(overloaded{[this](const ClientStart& event) {
+                                  _processClientStartEvent(event);
+                              },
+                              [this](const ClientExit& event) {
+                                  _processClientExitEvent(event);
+                              },
+                              [this](auto&&) {}},
+                   event);
+    }
+
+    void _processClientStartEvent(const midi::events::ClientStart& event)
+    {
+        const auto retryOrLogError =
+            [this](const std::error_code error,
+                   const midi::events::ClientStart& event) {
+                if (error == midi::EngineError::deviceNotReady)
+                {
+                    // The HW dev files associated with the input ports may not
+                    // be ready by the time the system announces the MIDI clien.
+                    // In that case, we need to try connecting again a bit
+                    // later.
+
+                    QTimer::singleShot(200, [this, event]() {
+                        _processClientStartEvent(event);
+                    });
+                }
+                else if (error != midi::EngineError::clientIsNotADevice)
+                {
+                    core::log() << error.message();
+                }
+            };
+
+        if (_padController)
+        {
+            if (std::visit(
+                    [](auto&& controller) { return controller->isConnected(); },
+                    *_padController))
+            {
+                return;
+            }
+
+            if (auto error = tryReconnectPad(*_padController, &*_midiEngine,
+                                             name(), event.client))
+            {
+                retryOrLogError(error, event);
+                return;
+            }
+            return;
+        }
+
+        auto controller = makePad(_parent, &*_midiEngine, name(), event.client);
+        if (controller)
+        {
+            _padController = std::move(*controller);
+            emit _parent->controllerChanged();
+        }
+        else
+        {
+            retryOrLogError(controller.error(), event);
+        }
+    }
+
+    void _processClientExitEvent(const midi::events::ClientExit& event)
+    {
+        if (!_padController)
+            return;
+        std::visit(
+            [&event](auto&& controller) {
+                if (controller->deviceId() == event.client)
+                    controller->disconnect();
+            },
+            *_padController);
+    }
+}; // namespace paddock
 
 Session::Session()
     : _impl{std::make_unique<_Impl>(this)}

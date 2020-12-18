@@ -1,11 +1,10 @@
 #include "KorgPadKontrol.hpp"
 
+#include "midi/errors.hpp"
 #include "midi/pads/KorgPadKontrol.hpp"
 #include "midi/pads/korgPadKontrol/Scene.hpp"
 
 #include <QObject>
-
-#include <iostream>
 
 namespace paddock
 {
@@ -18,24 +17,46 @@ public:
     {
     }
 
-    bool isNative()
+    bool isConnected() const { return static_cast<bool>(_controller); }
+
+    bool isNative() const
     {
-        return _controller.mode() == midi::KorgPadKontrol::Mode::native;
+        return _controller &&
+               _controller->mode() == midi::KorgPadKontrol::Mode::native;
     }
 
     std::error_code setMode(midi::KorgPadKontrol::Mode mode)
     {
-        return _controller.setMode(mode);
+        if (!_controller)
+            return midi::EngineError::noDeviceFound;
+
+        return _controller->setMode(mode);
+    }
+
+    void disconnect() { _controller = std::nullopt; }
+
+    void setController(midi::KorgPadKontrol&& controller)
+    {
+        _controller = std::move(controller);
+    }
+
+    midi::ClientId deviceId() const
+    {
+        if (!_controller)
+            return midi::ClientId{};
+        return _controller->deviceId();
     }
 
     Expected<midi::korgPadKontrol::Scene> queryCurrentScene()
     {
-        return _controller.queryCurrentScene();
+        if (!_controller)
+            return tl::unexpected(midi::EngineError::noDeviceFound);
+        return _controller->queryCurrentScene();
     }
 
 private:
     KorgPadKontrol* _parent;
-    midi::KorgPadKontrol _controller;
+    std::optional<midi::KorgPadKontrol> _controller;
 };
 
 KorgPadKontrol::KorgPadKontrol(QObject* parent,
@@ -50,6 +71,31 @@ KorgPadKontrol::~KorgPadKontrol() = default;
 bool KorgPadKontrol::isNative() const
 {
     return _impl->isNative();
+}
+
+bool KorgPadKontrol::isConnected() const
+{
+    return _impl->isConnected();
+}
+
+void KorgPadKontrol::disconnect()
+{
+    _impl->disconnect();
+    emit isConnectedChanged();
+}
+
+std::error_code KorgPadKontrol::setController(midi::KorgPadKontrol&& controller)
+{
+    _impl->setController(std::move(controller));
+    emit isConnectedChanged();
+
+    // This function may fail when applying the program
+    return std::error_code{};
+}
+
+midi::ClientId KorgPadKontrol::deviceId() const
+{
+    return _impl->deviceId();
 }
 
 void KorgPadKontrol::setNativeMode()

@@ -51,6 +51,10 @@ class MidiEngineErrorCategory : public std::error_category
         using Error = EngineError;
         switch (static_cast<Error>(code))
         {
+        case Error::clientIsNotADevice:
+            return "MIDI client is not a hardware controller";
+        case Error::deviceNotReady:
+            return "Hardware MIDI device not ready";
         case Error::initializationFailed:
             return "MIDI engine initialization failed";
         case Error::readEventFailed:

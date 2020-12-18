@@ -2,6 +2,8 @@
 
 #include "models.hpp"
 
+#include "midi/types.hpp"
+
 #include <QObject>
 
 #include <memory>
@@ -18,15 +20,25 @@ class KorgPadKontrol : public QObject
     Q_OBJECT
 
     Q_PROPERTY(bool isNative READ isNative NOTIFY isNativeChanged)
+    Q_PROPERTY(bool isConnected READ isConnected NOTIFY isConnectedChanged)
     Q_PROPERTY(paddock::ControllerModel::Model model MEMBER model CONSTANT)
 
 public:
-    static constexpr ControllerModel::Model model = ControllerModel::KorgPadKontrol;
+    static constexpr ControllerModel::Model model =
+        ControllerModel::KorgPadKontrol;
 
     KorgPadKontrol(QObject* parent, midi::KorgPadKontrol&& controller);
     ~KorgPadKontrol();
 
     bool isNative() const;
+    bool isConnected() const;
+
+    /// To be called from session when the device has been detected to be
+    /// be disconnected
+    void disconnect();
+
+    std::error_code setController(midi::KorgPadKontrol&& controller);
+    midi::ClientId deviceId() const;
 
 public Q_SLOTS:
     void setNativeMode();
@@ -35,6 +47,7 @@ public Q_SLOTS:
 
 signals:
     void isNativeChanged();
+    void isConnectedChanged();
 
 private:
     class _Impl;
@@ -43,5 +56,4 @@ private:
     std::unique_ptr<_Impl> _impl;
 };
 
-}
-
+} // namespace paddock

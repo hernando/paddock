@@ -10,8 +10,6 @@
 
 #include <map>
 
-#include <iostream>
-
 namespace paddock
 {
 namespace midi
@@ -284,7 +282,7 @@ Expected<Engine> Engine::create()
     snd_seq_port_subscribe_set_time_update(subs, 1);
     snd_seq_port_subscribe_set_time_real(subs, 1);
     if (snd_seq_subscribe_port(handle, subs) == -1)
-        std::cerr << "Error subscribing port" << std::endl;
+        return tl::make_unexpected(EngineError::initializationFailed);
 
     return Engine(Handle(handle, snd_seq_close));
 }

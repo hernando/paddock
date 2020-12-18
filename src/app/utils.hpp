@@ -2,7 +2,7 @@
 
 #include "core/Log.hpp"
 
-#include <tl/expected.hpp>
+#include "utils/Expected.hpp"
 
 #include <QCoreApplication>
 
@@ -11,9 +11,10 @@
 
 namespace paddock
 {
+
 template <typename F, typename... Args>
-tl::expected<std::invoke_result_t<F, Args...>, std::error_code>
-    execInMainThread(F&& f, Args&&... args)
+std::future<std::invoke_result_t<F, Args...>> execInMainThreadAsync(
+    F&& f, Args&&... args)
 {
     using ReturnType = std::invoke_result_t<F, Args...>;
 
@@ -25,6 +26,17 @@ tl::expected<std::invoke_result_t<F, Args...>, std::error_code>
 
     QMetaObject::invokeMethod(QCoreApplication::instance(),
                               [task = std::move(task)]() mutable { task(); });
+    return future;
+}
+
+template <typename F, typename... Args>
+tl::expected<std::invoke_result_t<F, Args...>, std::error_code>
+    execInMainThread(F&& f, Args&&... args)
+{
+    using ReturnType = std::invoke_result_t<F, Args...>;
+
+    auto future = execInMainThreadAsync(std::forward<F>(f), std::forward<Args>(args)...);
+
     try
     {
         if constexpr (std::is_same_v<ReturnType, void>)

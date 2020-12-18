@@ -76,17 +76,17 @@ std::ostream& operator<<(std::ostream& out, const Scene& scene)
 {
     for (size_t i = 0; i != 16; ++i)
     {
-        std::cout << "Pad " << (i + 1) << " " << scene.pads[i] << std::endl;
+        out << "Pad " << (i + 1) << " " << scene.pads[i] << std::endl;
     }
-    std::cout << "Pedal " << scene.pedal << std::endl;
-    std::cout << "Knob 1 " << scene.knobs[0] << std::endl;
-    std::cout << "Knob 2 " << scene.knobs[1] << std::endl;
-    std::cout << "X " << scene.x << std::endl;
-    std::cout << "Y " << scene.y << std::endl;
-    std::cout << "Flam " << scene.flam << std::endl;
-    std::cout << "Roll " << scene.roll << std::endl;
-    std::cout << "Fixed velocity " << int(scene.fixedVelocity) << std::endl;
-    std::cout << std::endl;
+    out << "Pedal " << scene.pedal << std::endl;
+    out << "Knob 1 " << scene.knobs[0] << std::endl;
+    out << "Knob 2 " << scene.knobs[1] << std::endl;
+    out << "X " << scene.x << std::endl;
+    out << "Y " << scene.y << std::endl;
+    out << "Flam " << scene.flam << std::endl;
+    out << "Roll " << scene.roll << std::endl;
+    out << "Fixed velocity " << int(scene.fixedVelocity) << std::endl;
+    out << std::endl;
     return out;
 }
 

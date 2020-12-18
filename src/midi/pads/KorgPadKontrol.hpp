@@ -50,6 +50,8 @@ public:
     KorgPadKontrol(const KorgPadKontrol& other) = delete;
     KorgPadKontrol& operator=(const KorgPadKontrol& other) = delete;
 
+    ClientId deviceId() const;
+
     std::error_code setMode(Mode mode);
     Mode mode() const;
 

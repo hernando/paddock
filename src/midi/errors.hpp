@@ -16,10 +16,12 @@ enum class DeviceError
 
 enum class EngineError
 {
-    initializationFailed = 1,
-    readEventFailed,
+    clientIsNotADevice = 1,
+    deviceNotReady,
+    initializationFailed,
     noEngineAvailable,
-    noDeviceFound
+    noDeviceFound,
+    readEventFailed
 };
 
 std::error_code make_error_code(DeviceError error);

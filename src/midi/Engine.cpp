@@ -124,12 +124,6 @@ private:
                 if (_eventCallback)
                     _eventCallback(*event);
             }
-
-            std::visit(overloaded{[this](auto&& event) {
-                           std::cout << "Engine handler " << event.description
-                                     << std::endl;
-                       }},
-                       *event);
         }
     }
 };
@@ -183,6 +177,19 @@ Expected<Pad> Engine::connect(const std::string& clientName)
                     return std::move(pad);
                 });
         }
+    }
+    return tl::make_unexpected(EngineError::noDeviceFound);
+}
+
+Expected<Pad> Engine::connect(const std::string& clientName,
+                              const ClientInfo& deviceInfo)
+{
+    if (KorgPadKontrol::matches(deviceInfo))
+    {
+        return KorgPadKontrol::open(this, deviceInfo, clientName)
+            .and_then([](KorgPadKontrol&& pad) -> Expected<Pad> {
+                return std::move(pad);
+            });
     }
     return tl::make_unexpected(EngineError::noDeviceFound);
 }

@@ -4,5 +4,5 @@ import Paddock 1.0
 PadUi.Controller {
     property KorgPadKontrol device: null
 
-    enabled: device === undefined
+    enabled: device !== null && device.isConnected
 }

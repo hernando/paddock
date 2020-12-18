@@ -50,6 +50,12 @@ public:
     /// @param clientName the name for the MIDI sequencer client
     Expected<Pad> connect(const std::string& clientName);
 
+    /// Connect to a specific hardwared controller
+    /// @param clientName the name for the MIDI sequencer client
+    /// @param deviceInfo the device to try connecting.
+    Expected<Pad> connect(const std::string& clientName,
+                          const ClientInfo& deviceInfo);
+
     void add(core::PollHandle handle, core::PollCallback callback);
     std::future<void> remove(const core::PollHandle& handle);
 

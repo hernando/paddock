@@ -240,6 +240,11 @@ public:
 
     ~_Impl() { _stopPolling(); }
 
+    ClientId deviceId() const
+    {
+        return _deviceInfo.id;
+    }
+
     Mode mode() const { return _mode; }
 
     std::error_code setMode(Mode mode)
@@ -559,6 +564,11 @@ KorgPadKontrol::~KorgPadKontrol() = default;
 KorgPadKontrol::KorgPadKontrol(KorgPadKontrol&& other) noexcept = default;
 KorgPadKontrol& KorgPadKontrol::operator=(KorgPadKontrol&& other) noexcept =
     default;
+
+ClientId KorgPadKontrol::deviceId() const
+{
+    return _impl->deviceId();
+}
 
 KorgPadKontrol::Mode KorgPadKontrol::mode() const
 {
