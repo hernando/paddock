@@ -6,16 +6,12 @@ target_sources(paddock_core
     Globals.hpp
     Log.hpp
     Poller.hpp
-    Program.hpp
     errors.hpp
-    resources.hpp
   PRIVATE
     Globals.cpp
     Log.cpp
     Poller.cpp
-    Program.cpp
     errors.cpp
-    resources.cpp
 
     platform/poll.hpp
     platform/poll.cpp

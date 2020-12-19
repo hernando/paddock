@@ -2,7 +2,6 @@
 #include "resources.hpp"
 
 #include "core/Globals.hpp"
-#include "core/resources.hpp"
 
 #include "ui/resources.hpp"
 
@@ -24,7 +23,6 @@ int main(int argc, char** argv)
     globals.argv = argv;
 
     paddock::initResources();
-    paddock::core::initResources();
     paddock::ui::initResources();
 
     paddock::Session session;

@@ -2,6 +2,8 @@
 
 #include "Session.hpp"
 
+#include "Program.hpp"
+
 #include "pads/pads.hpp"
 
 #include "utils.hpp"
@@ -11,7 +13,6 @@
 #include "midi/pads/KorgPadKontrol.hpp"
 
 #include "core/Log.hpp"
-#include "core/Program.hpp"
 
 #include "utils/overloaded.hpp"
 
@@ -130,7 +131,6 @@ public:
                     [this, event] { _processEngineEvent(event); });
             });
 
-        // TODO: Implement Client/Port detection changes
         auto controller = makePad(_parent, &*_midiEngine, name());
         _padController = controller ? std::make_optional(std::move(*controller))
                                     : std::nullopt;
@@ -151,7 +151,8 @@ public:
 
     std::error_code openProgram(std::string filePath)
     {
-        auto program = new core::Program(_parent);
+        // TODO load a program
+        auto program = new Program(_parent);
 
         if (!program)
             return std::make_error_code(std::errc::io_error);
@@ -163,14 +164,14 @@ public:
 
         _program = program;
 
-        connect(_program, &core::Program::dirtyChanged,
+        connect(_program, &Program::dirtyChanged,
                 [this]() { this->sendDirty(_program->dirty()); });
 
         emit _parent->programChanged();
         return std::error_code{}; // success
     }
 
-    core::Program* program() const { return _program; }
+    Program* program() const { return _program; }
 
 private:
     Session* _parent;
@@ -178,7 +179,7 @@ private:
     std::optional<midi::Engine> _midiEngine;
     std::optional<Pad> _padController;
 
-    core::Program* _program{nullptr};
+    Program* _program{nullptr};
     std::string _filePath;
     std::optional<core::NsmSession> _nsmSession;
     std::string _name{"Paddock"};
@@ -273,7 +274,7 @@ std::error_code Session::init()
     return _impl->initMidi();
 }
 
-core::Program* Session::program() const
+Program* Session::program() const
 {
     return _impl->program();
 }

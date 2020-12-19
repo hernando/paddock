@@ -1,6 +1,8 @@
 add_executable(paddock)
 
 target_sources(paddock PRIVATE
+  Program.cpp
+  Program.hpp
   Session.cpp
   Session.hpp
   resources.hpp
@@ -9,6 +11,8 @@ target_sources(paddock PRIVATE
 
   pads/KorgPadKontrol.hpp
   pads/KorgPadKontrol.cpp
+  pads/KorgPadKontrolProgram.hpp
+  pads/KorgPadKontrolProgram.cpp
   pads/models.hpp
   pads/pads.hpp
   pads/pads.cpp

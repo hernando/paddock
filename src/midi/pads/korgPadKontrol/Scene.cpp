@@ -225,21 +225,6 @@ Expected<std::vector<std::byte>> encodeScene(const Scene& scene)
 
 Expected<Scene> decodeScene(std::span<const std::byte> payload)
 {
-    std::cout << "Decoded" << std::endl;
-    int i = 0;
-    for (auto byte : payload)
-    {
-        printf("%.2X ", int(byte));
-        if (++i == 10)
-            printf(" ");
-        if (i == 20)
-        {
-            printf("\n");
-            i = 0;
-        }
-    }
-    printf("\n");
-
     Scene scene;
 
     for (size_t i = 0; i != 16; ++i)

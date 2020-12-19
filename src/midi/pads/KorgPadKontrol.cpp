@@ -312,6 +312,7 @@ public:
     {
         std::lock_guard<std::mutex> lock(_programMutex);
         _program = std::move(program);
+        // TODO Change current scene
     }
 
     std::future<Expected<bool>> sendNativeCommand(
@@ -358,7 +359,7 @@ public:
 
     Expected<korgPadKontrol::Scene> queryCurrentScene()
     {
-        auto data = _postCommand(GlobalDataDumpRequest{}).get();
+        //auto data = _postCommand(GlobalDataDumpRequest{}).get();
         // std::cout << "Decoded" << std::endl;
         // int i = 0;
         // for (auto byte : std::span{*data}.subspan(9))

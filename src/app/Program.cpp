@@ -2,8 +2,6 @@
 
 namespace paddock
 {
-namespace core
-{
 Program::Program(QObject* parent)
     : QObject(parent)
 {
@@ -17,5 +15,4 @@ void Program::setDirty(bool dirty)
         Q_EMIT dirtyChanged();
 }
 
-} // namespace core
 } // namespace paddock

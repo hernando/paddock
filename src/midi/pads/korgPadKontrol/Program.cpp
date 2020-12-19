@@ -12,6 +12,17 @@ namespace midi
 {
 namespace korgPadKontrol
 {
+
+void Program::setScene(Scene scene)
+{
+    _scene = std::move(scene);
+}
+
+const Scene* Program::scene() const
+{
+    return _scene ? &*_scene : nullptr;
+}
+
 void Program::processEvent(const Event& event, Client& client, Device& device)
 {
     std::cout << event << std::endl;

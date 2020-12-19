@@ -8,15 +8,12 @@
 
 namespace paddock
 {
-namespace core
-{
-class Program;
-}
-
 namespace midi
 {
 class Engine;
 }
+
+class Program;
 
 class Session : public QObject
 {
@@ -25,7 +22,7 @@ class Session : public QObject
     Q_PROPERTY(
         QVariant controller READ controller NOTIFY controllerChanged)
     Q_PROPERTY(
-        paddock::core::Program* program READ program NOTIFY programChanged)
+        paddock::Program* program READ program NOTIFY programChanged)
 
     Q_PROPERTY(bool isNsmSession READ isNsmSession CONSTANT)
 
@@ -35,7 +32,7 @@ public:
 
     std::error_code init();
 
-    core::Program* program() const;
+    Program* program() const;
 
     QVariant controller();
 

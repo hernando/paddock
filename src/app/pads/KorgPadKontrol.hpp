@@ -15,6 +15,8 @@ namespace midi
 class KorgPadKontrol;
 }
 
+class KorgPadKontrolProgram;
+
 class KorgPadKontrol : public QObject
 {
     Q_OBJECT
@@ -22,6 +24,8 @@ class KorgPadKontrol : public QObject
     Q_PROPERTY(bool isNative READ isNative NOTIFY isNativeChanged)
     Q_PROPERTY(bool isConnected READ isConnected NOTIFY isConnectedChanged)
     Q_PROPERTY(paddock::ControllerModel::Model model MEMBER model CONSTANT)
+    Q_PROPERTY(paddock::KorgPadKontrolProgram* program READ program WRITE
+                   setProgram NOTIFY programChanged)
 
 public:
     static constexpr ControllerModel::Model model =
@@ -40,6 +44,9 @@ public:
     std::error_code setController(midi::KorgPadKontrol&& controller);
     midi::ClientId deviceId() const;
 
+    KorgPadKontrolProgram* program();
+    void setProgram(KorgPadKontrolProgram* prog);
+
 public Q_SLOTS:
     void setNativeMode();
     void setNormalMode();
@@ -48,6 +55,7 @@ public Q_SLOTS:
 signals:
     void isNativeChanged();
     void isConnectedChanged();
+    void programChanged();
 
 private:
     class _Impl;

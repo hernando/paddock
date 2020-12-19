@@ -4,8 +4,6 @@
 
 namespace paddock
 {
-namespace core
-{
 
 class Program : public QObject
 {
@@ -30,5 +28,4 @@ private:
     bool _dirty{false};
 };
 
-} // namespace core
 } // namespace paddock
