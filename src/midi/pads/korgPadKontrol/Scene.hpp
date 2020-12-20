@@ -26,18 +26,17 @@ struct Scene
         Value7bit note;
         enum class VelocityCurve
         {
-            Curve1 = 0,
-            Curve2,
-            Curve3,
-            Curve4,
-            Curve5,
-            Curve6,
-            Curve7,
-            Curve8,
+            curve1 = 0,
+            curve2,
+            curve3,
+            curve4,
+            curve5,
+            curve6,
+            curve7,
+            curve8,
         };
         // Curve or constant value in 1-127
         std::variant<VelocityCurve, Value7bit> velocity;
-        Value7bit offVelocity;
     };
 
     struct Control
@@ -83,8 +82,8 @@ struct Scene
     {
         unsigned char minSpeed; // min 40 if roll
         unsigned char maxSpeed; // max 240 if roll
-        unsigned char minVolume;
-        unsigned char maxVolume;
+        Value7bit minVolume;
+        Value7bit maxVolume;
     };
 
     std::array<Trigger, 16> pads;
@@ -101,8 +100,14 @@ struct Scene
     Value7bit fixedVelocity;
 };
 
-Expected<std::vector<std::byte>> encodeScene(const Scene& scene);
+Expected<std::array<std::byte, 138>> encodeScene(const Scene& scene);
 Expected<Scene> decodeScene(std::span<const std::byte> payload);
+
+bool operator==(const Scene& lhs, const Scene& rhs);
+bool operator==(const Scene::Trigger& lhs, const Scene::Trigger& rhs);
+bool operator==(const Scene::Knob& lhs, const Scene::Knob& rhs);
+bool operator==(const Scene::Axis& lhs, const Scene::Axis& rhs);
+bool operator==(const Scene::Repeater& lhs, const Scene::Repeater& rhs);
 
 } // namespace korgPadKontrol
 } // namespace midi

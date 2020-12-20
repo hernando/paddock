@@ -20,6 +20,11 @@
 #include <cassert>
 #include <mutex>
 
+#include <iostream>
+
+
+#include "korgPadKontrol/scenePrinters.hpp"
+
 namespace paddock
 {
 namespace midi
@@ -240,10 +245,7 @@ public:
 
     ~_Impl() { _stopPolling(); }
 
-    ClientId deviceId() const
-    {
-        return _deviceInfo.id;
-    }
+    ClientId deviceId() const { return _deviceInfo.id; }
 
     Mode mode() const { return _mode; }
 
@@ -265,10 +267,9 @@ public:
         if (!device)
             return device.error();
 
-        auto client =
-            _engine->open(_midiClientName, mode == Mode::native
-                                               ? PortDirection::read
-                                               : PortDirection::duplex);
+        auto client = _engine->open(
+            _midiClientName,
+            mode == Mode::native ? PortDirection::read : PortDirection::duplex);
         if (!client)
         {
             return client.error();
@@ -359,7 +360,7 @@ public:
 
     Expected<korgPadKontrol::Scene> queryCurrentScene()
     {
-        //auto data = _postCommand(GlobalDataDumpRequest{}).get();
+        // auto data = _postCommand(GlobalDataDumpRequest{}).get();
         // std::cout << "Decoded" << std::endl;
         // int i = 0;
         // for (auto byte : std::span{*data}.subspan(9))

@@ -56,3 +56,4 @@ if(PADDOCK_USE_ALSA)
   )
 endif()
 
+add_subdirectory(tests)

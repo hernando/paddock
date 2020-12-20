@@ -11,7 +11,7 @@ namespace midi
 {
 namespace korgPadKontrol
 {
-std::ostream& operator<<(std::ostream& out, const Scene::Trigger& trigger)
+inline std::ostream& operator<<(std::ostream& out, const Scene::Trigger& trigger)
 {
     out << (trigger.enabled ? 'e' : 'd') << int(trigger.midiChannel);
     out << (trigger.type == Scene::SwitchType::Toggle ? 't' : 'm');
@@ -35,7 +35,7 @@ std::ostream& operator<<(std::ostream& out, const Scene::Trigger& trigger)
     return out;
 }
 
-std::ostream& operator<<(std::ostream& out, const Scene::Knob& knob)
+inline std::ostream& operator<<(std::ostream& out, const Scene::Knob& knob)
 {
     out << (knob.enabled ? 'e' : 'd');
     out << (knob.reversePolarity ? '-' : '+');
@@ -57,14 +57,14 @@ std::ostream& operator<<(std::ostream& out, const Scene::Knob& knob)
     return out;
 }
 
-std::ostream& operator<<(std::ostream& out, const Scene::Axis& axis)
+inline std::ostream& operator<<(std::ostream& out, const Scene::Axis& axis)
 {
     out << static_cast<const Scene::Knob&>(axis) << " "
         << int(axis.releaseValue);
     return out;
 }
 
-std::ostream& operator<<(std::ostream& out, const Scene::Repeater& repeater)
+inline std::ostream& operator<<(std::ostream& out, const Scene::Repeater& repeater)
 {
     out << "speed " << int(repeater.minSpeed) << '-' << int(repeater.maxSpeed)
         << " volume " << int(repeater.minVolume) << '-'
@@ -72,7 +72,7 @@ std::ostream& operator<<(std::ostream& out, const Scene::Repeater& repeater)
     return out;
 }
 
-std::ostream& operator<<(std::ostream& out, const Scene& scene)
+inline std::ostream& operator<<(std::ostream& out, const Scene& scene)
 {
     for (size_t i = 0; i != 16; ++i)
     {
