@@ -6,12 +6,14 @@
 
 namespace paddock
 {
-class KorgPadKontrolProgram : public Program
+namespace korgPadKontrol
+{
+class Program : public paddock::Program
 {
     Q_OBJECT
 
 public:
-    KorgPadKontrolProgram(QObject* parent);
+    Program(QObject* parent);
 
     const midi::korgPadKontrol::Program& midiProgram() const;
     bool hasScene() const;
@@ -19,11 +21,9 @@ public:
     // Reset the scene without triggering the programChanged signal
     void resetScene(midi::korgPadKontrol::Scene scene);
 
-signals:
-    void programChanged();
-
 private:
-    midi::korgPadKontrol::Program program;
+    midi::korgPadKontrol::Program _program;
 };
 
+} // namespace korgPadKontrol
 } // namespace paddock

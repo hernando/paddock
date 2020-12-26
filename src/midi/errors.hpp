@@ -24,8 +24,14 @@ enum class EngineError
     readEventFailed
 };
 
+enum class ProgramError
+{
+    invalidProgram = 1
+};
+
 std::error_code make_error_code(DeviceError error);
 std::error_code make_error_code(EngineError error);
+std::error_code make_error_code(ProgramError error);
 
 } // namespace midi
 } // namespace paddock
@@ -40,6 +46,10 @@ struct is_error_code_enum<paddock::midi::DeviceError> : true_type
 };
 template <>
 struct is_error_code_enum<paddock::midi::EngineError> : true_type
+{
+};
+template <>
+struct is_error_code_enum<paddock::midi::ProgramError> : true_type
 {
 };
 } // namespace std

@@ -76,6 +76,32 @@ class MidiEngineErrorCategory : public std::error_category
 
 const MidiEngineErrorCategory midiEngineErrorCategory{};
 
+class ProgramErrorCategory : public std::error_category
+{
+    const char* name() const noexcept override
+    {
+        return "paddock-program-error";
+    }
+    std::string message(int code) const override
+    {
+        using Error = ProgramError;
+        switch (static_cast<Error>(code))
+        {
+        case Error::invalidProgram:
+            return "Invalid device program";
+        default:
+            throw std::logic_error("Unknown error code");
+        }
+    }
+    bool equivalent(int code, const std::error_condition& condition) const
+        noexcept override
+    {
+        return (condition == core::ErrorType::program);
+    }
+};
+
+const ProgramErrorCategory programErrorCategory{};
+
 } // namespace
 
 std::error_code make_error_code(DeviceError error)
@@ -86,6 +112,11 @@ std::error_code make_error_code(DeviceError error)
 std::error_code make_error_code(EngineError error)
 {
     return std::error_code{static_cast<int>(error), midiEngineErrorCategory};
+}
+
+std::error_code make_error_code(ProgramError error)
+{
+    return std::error_code{static_cast<int>(error), programErrorCategory};
 }
 
 } // namespace midi

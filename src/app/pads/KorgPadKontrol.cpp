@@ -1,6 +1,6 @@
 #include "KorgPadKontrol.hpp"
 
-#include "KorgPadKontrolProgram.hpp"
+#include "korgPadKontrol/Program.hpp"
 
 #include "core/Log.hpp"
 
@@ -15,12 +15,18 @@ namespace paddock
 class KorgPadKontrol::_Impl
 {
 public:
+    _Impl(KorgPadKontrol* parent)
+        : _parent{parent}
+        , _program{nullptr}
+    {
+    }
+
     _Impl(KorgPadKontrol* parent, midi::KorgPadKontrol&& controller)
         : _parent{parent}
         , _controller{std::move(controller)}
         , _program{nullptr}
     {
-        setProgram(new KorgPadKontrolProgram{parent});
+        setProgram(new korgPadKontrol::Program{parent});
     }
 
     bool isConnected() const { return static_cast<bool>(_controller); }
@@ -56,9 +62,9 @@ public:
         return _controller->deviceId();
     }
 
-    KorgPadKontrolProgram* program() { return _program; }
+    korgPadKontrol::Program* program() { return _program; }
 
-    void setProgram(KorgPadKontrolProgram* prog)
+    void setProgram(korgPadKontrol::Program* prog)
     {
         if (_program)
             _program->disconnect(_parent);
@@ -66,14 +72,46 @@ public:
         _program = prog;
         if (_program)
         {
-            _program->connect(_program, &KorgPadKontrolProgram::programChanged,
-                              _parent, [this]() {
-                                  if (auto error = _getOrSetScene())
-                                      core::log() << error.message();
-                              });
+            _getOrSetScene();
         }
+    }
 
-        _getOrSetScene();
+    std::error_code loadDeviceSceneIntoProgram()
+    {
+        if (!_program)
+            return std::error_code{};
+
+        const auto scene = _queryCurrentScene();
+        if (!scene)
+            return scene.error();
+
+        _program->resetScene(*scene);
+
+        return std::error_code{};
+    }
+
+    std::error_code uploadProgramToDevice()
+    {
+        if (!_controller)
+            return midi::EngineError::noDeviceFound;
+
+        if (!_program->hasScene())
+            return midi::ProgramError::invalidProgram;
+
+        return _controller->setProgram(_program->midiProgram());
+    }
+
+private:
+    KorgPadKontrol* _parent;
+    std::optional<midi::KorgPadKontrol> _controller;
+
+    korgPadKontrol::Program* _program;
+
+    Expected<midi::korgPadKontrol::Scene> _queryCurrentScene()
+    {
+        if (!_controller)
+            return tl::unexpected(midi::EngineError::noDeviceFound);
+        return _controller->queryCurrentScene();
     }
 
     std::error_code _getOrSetScene()
@@ -94,20 +132,13 @@ public:
         }
         return std::error_code{};
     }
-
-    Expected<midi::korgPadKontrol::Scene> queryCurrentScene()
-    {
-        if (!_controller)
-            return tl::unexpected(midi::EngineError::noDeviceFound);
-        return _controller->queryCurrentScene();
-    }
-
-private:
-    KorgPadKontrol* _parent;
-    std::optional<midi::KorgPadKontrol> _controller;
-
-    KorgPadKontrolProgram* _program;
 };
+
+KorgPadKontrol::KorgPadKontrol(QObject* parent)
+    : QObject(parent)
+    , _impl(std::make_unique<_Impl>(this))
+{
+}
 
 KorgPadKontrol::KorgPadKontrol(QObject* parent,
                                midi::KorgPadKontrol&& controller)
@@ -138,8 +169,9 @@ std::error_code KorgPadKontrol::setController(midi::KorgPadKontrol&& controller)
 {
     if (auto error = _impl->setController(std::move(controller)))
         return error;
-    return std::error_code{};
     emit isConnectedChanged();
+
+    return std::error_code{};
 }
 
 midi::ClientId KorgPadKontrol::deviceId() const
@@ -147,14 +179,14 @@ midi::ClientId KorgPadKontrol::deviceId() const
     return _impl->deviceId();
 }
 
-KorgPadKontrolProgram* KorgPadKontrol::program()
+korgPadKontrol::Program* KorgPadKontrol::program()
 {
     return _impl->program();
 }
 
-void KorgPadKontrol::setProgram(KorgPadKontrolProgram* prog)
+void KorgPadKontrol::setProgram(korgPadKontrol::Program* prog)
 {
-    KorgPadKontrolProgram* old = _impl->program();
+    const auto* old = _impl->program();
     if (old == prog)
         return;
 
@@ -174,9 +206,14 @@ void KorgPadKontrol::setNormalMode()
         emit isNativeChanged();
 }
 
-void KorgPadKontrol::dumpCurrentScene()
+std::error_code KorgPadKontrol::loadDeviceSceneIntoProgram()
 {
-    _impl->queryCurrentScene();
+    return _impl->loadDeviceSceneIntoProgram();
+}
+
+std::error_code KorgPadKontrol::uploadProgramToDevice()
+{
+    return _impl->uploadProgramToDevice();
 }
 
 } // namespace paddock

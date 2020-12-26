@@ -23,6 +23,7 @@ public:
 
 signals:
     void dirtyChanged();
+    void changed();
 
 private:
     bool _dirty{false};

@@ -15,6 +15,8 @@ ApplicationWindow {
 
     menuBar: MenuBar {
         session: root.session
+
+        onQuitRequest: root.close()
     }
 
     ControllerLayout {

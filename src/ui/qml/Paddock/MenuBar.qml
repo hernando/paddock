@@ -8,34 +8,39 @@ QQC.MenuBar {
 
     property Session session
 
+    signal quitRequest
+
     QQC.Menu {
         title: qsTr("&File")
-        QQC.Action {
-            text: qsTr("&New...")
+        MenuItem {
+            text: qsTr("New...")
             shortcut: "Ctrl+N"
         }
-        QQC.Action {
+        MenuItem {
             enabled: !session.isNsmSession
-            text: qsTr("&Open...")
+            text: qsTr("Open...")
             shortcut: "Ctrl+O"
         }
-        QQC.Action {
+        MenuItem {
             enabled: session.isNsmSession
-            text: qsTr("&Import into...")
+            text: qsTr("Import into...")
             shortcut: "Ctrl+I"
         }
-        QQC.Action {
-            text: qsTr("&Save")
+        MenuItem {
+            text: qsTr("Save")
             shortcut: "Ctrl+S"
         }
-        QQC.Action {
+        MenuItem {
             enabled: !session.isNsmSession
-            text: qsTr("Save &As...")
+            text: qsTr("Save As...")
             shortcut: "Ctrl+Shift+S"
         }
         QQC.MenuSeparator { }
-        QQC.Action { text: qsTr("&Close") }
-        QQC.Action { text: qsTr("&Quit") }
+        MenuItem { text: qsTr("Close") }
+        MenuItem {
+            text: qsTr("Quit")
+            onTriggered: root.quitRequest()
+        }
     }
 
     QQC.Menu {
@@ -43,27 +48,33 @@ QQC.MenuBar {
         MenuItem {
             enabled: session.controller !== undefined &&
                      session.controller.isNative
-            text: qsTr("Set &normal mode")
+            text: qsTr("Set normal mode")
             onTriggered: session.controller.setNormalMode()
             shortcut: "Ctrl+M"
         }
         MenuItem {
             enabled: session.controller !== undefined &&
                      !session.controller.isNative
-            text: qsTr("Set &native mode")
+            text: qsTr("Set native mode")
             onTriggered: session.controller.setNativeMode()
             shortcut: "Ctrl+M"
         }
         MenuItem {
-            text: qsTr("&Dump scene")
+            text: qsTr("Load device scene")
             enabled: session.controller !== undefined
-            onTriggered: session.controller.dumpCurrentScene()
-            shortcut: "Ctrl+D"
+            onTriggered: session.controller.loadDeviceSceneIntoProgram()
+            shortcut: "Ctrl+R"
+        }
+        MenuItem {
+            text: qsTr("Upload program")
+            enabled: session.controller !== undefined
+            onTriggered: session.controller.uploadProgramToDevice()
+            shortcut: "Ctrl+U"
         }
     }
 
     QQC.Menu {
-        title: qsTr("&Help")
-        QQC.Action { text: qsTr("&About") }
+        title: qsTr("Help")
+        QQC.Action { text: qsTr("About") }
     }
 }

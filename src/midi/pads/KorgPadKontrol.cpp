@@ -22,7 +22,6 @@
 
 #include <iostream>
 
-
 #include "korgPadKontrol/scenePrinters.hpp"
 
 namespace paddock
@@ -199,11 +198,46 @@ struct ResetDefaultScene
     }
 };
 
+struct SetCurrentScene
+{
+    std::vector<std::byte> hostMessage;
+
+    using Reply = Expected<bool>;
+    std::promise<Reply> promise;
+
+    explicit SetCurrentScene(const std::array<std::byte, 138>& scene)
+        : hostMessage(150, 0_b)
+    {
+        using namespace sysex;
+        const auto header = std::to_array({SYSEX_HEADER, 0x7F_b, 0x7F_b, 0x02_b,
+                                           0x0A_b, 0x02_b, CURRENT_SCENE_DUMP});
+
+        std::copy(header.begin(), header.end(), hostMessage.begin());
+        std::copy(scene.begin(), scene.end(),
+                  hostMessage.begin() + header.size());
+        hostMessage[149] = END;
+    }
+
+    bool handle(std::span<const std::byte> payload)
+    {
+        // The structure of the reply is
+        // [0xF0], 0x42, 0x4g, 0x6E, 0x08, PACKET_COMM, type, reply, [0xF7]
+        if (payload.size() != 7 || payload[4] != sysex::PACKET_COMM ||
+            (payload[5] != sysex::DATA_LOAD_COMPLETED &&
+             payload[5] != sysex::DATA_LOAD_ERROR))
+        {
+            return false;
+        }
+        promise.set_value(payload[5] == sysex::DATA_LOAD_COMPLETED);
+        return true;
+    }
+};
+
 using CommandReply =
     std::variant<CurrentSceneDataDumpRequest, GlobalDataDumpRequest,
                  IdentityRequest, NativeModeRequest<true>,
                  NativeModeRequest<false>, PacketCommunicationCmd,
-                 ResetDefaultScene>;
+                 ResetDefaultScene, SetCurrentScene>;
 
 std::error_code check(std::future<Expected<bool>>&& future)
 {
@@ -309,11 +343,24 @@ public:
         return _handShake();
     }
 
-    void setProgram(korgPadKontrol::Program program)
+    std::error_code setProgram(korgPadKontrol::Program program)
     {
-        std::lock_guard<std::mutex> lock(_programMutex);
-        _program = std::move(program);
-        // TODO Change current scene
+        {
+            std::lock_guard<std::mutex> lock(_programMutex);
+            _program = std::move(program);
+        }
+
+        auto scene = _program.scene();
+        if (!scene)
+            return ProgramError::invalidProgram;
+
+        auto payload = encodeScene(*scene);
+        if (!payload)
+            return payload.error();
+
+        POST_AND_CHECK(SetCurrentScene(*payload));
+
+        return std::error_code{};
     }
 
     std::future<Expected<bool>> sendNativeCommand(
@@ -582,9 +629,9 @@ std::error_code KorgPadKontrol::setMode(Mode mode)
     return _impl->setMode(mode);
 }
 
-void KorgPadKontrol::setProgram(korgPadKontrol::Program program)
+std::error_code KorgPadKontrol::setProgram(korgPadKontrol::Program program)
 {
-    _impl->setProgram(std::move(program));
+    return _impl->setProgram(std::move(program));
 }
 
 std::future<Expected<bool>> KorgPadKontrol::sendNativeCommand(

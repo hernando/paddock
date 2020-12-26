@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Layouts 1.15
 
 import Paddock 1.0
+import Paddock.Pads.KorgPadKontrol 1.0
 
 GridLayout {
     id: root
@@ -9,6 +10,8 @@ GridLayout {
     rows: 4
     columnSpacing: Styling.sizes.spacings.min
     rowSpacing: Styling.sizes.spacings.min
+
+    property Program program
 
     Rectangle {
         color: "transparent"
@@ -44,6 +47,8 @@ GridLayout {
         Layout.preferredWidth: root.width * 0.6
         Layout.fillHeight: true
         Layout.fillWidth: true
+
+        program: root.program
     }
 
     Rectangle {

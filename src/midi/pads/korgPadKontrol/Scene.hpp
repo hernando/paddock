@@ -46,7 +46,7 @@ struct Scene
         Value7bit releaseValue;
     };
 
-    enum class SwitchType { Momentary, Toggle };
+    enum class SwitchType { Momentary = 0, Toggle = 1};
 
     struct Trigger
     {

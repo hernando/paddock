@@ -3,6 +3,7 @@ import Paddock 1.0
 
 PadUi.Controller {
     property KorgPadKontrol device: null
+    program: device.program
 
     enabled: device !== null && device.isConnected
 }

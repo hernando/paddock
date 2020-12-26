@@ -55,7 +55,7 @@ public:
     std::error_code setMode(Mode mode);
     Mode mode() const;
 
-    void setProgram(korgPadKontrol::Program program);
+    std::error_code setProgram(korgPadKontrol::Program program);
 
     // We need future.then to return std::future<std::error_code> without
     // complicatint the implementation.

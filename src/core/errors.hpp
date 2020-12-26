@@ -14,6 +14,7 @@ enum class Error
 enum class ErrorType
 {
     core,
+    program,
     nsmSession,
     midi
 };

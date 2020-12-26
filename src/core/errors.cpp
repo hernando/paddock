@@ -33,6 +33,8 @@ struct PaddockErrorTypeCategory : std::error_category
         {
         case ErrorType::core:
             return "core error";
+        case ErrorType::program:
+            return "device program error";
         case ErrorType::nsmSession:
             return "NSM session error";
         case ErrorType::midi:

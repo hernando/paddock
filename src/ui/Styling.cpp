@@ -42,6 +42,7 @@ struct StylingData
         struct Widths
         {
             int pad{48};
+            int iconButton{24};
         } widths;
     } sizes;
 
@@ -49,13 +50,11 @@ struct StylingData
     {
         struct Layers
         {
-            QColor control{"#E7E7F0"};
+            QColor control{"#E7E7EF"};
             QColor background{"#FFFFE0"};
             QColor backgroundDisabled{"#FFFFE0"};
-            QColor backgroundHovered{"#CFCFE0"};
             QColor border{"#303040"};
             QColor foreground{"#00000"};
-            QColor foregroundHovered{"#00000"};
             QColor foregroundDisabled{"#7F7F7F"};
         } layers;
 
@@ -63,6 +62,16 @@ struct StylingData
         {
             QColor blinking{"#FF2020"};
         } state;
+
+        struct Buttons
+        {
+            QColor iconPressed{"#7F7F7F"};
+            QColor iconChecked{"#1FAF1F"};
+            QColor icon{"#000000"};
+            QColor textPressed{"#7F7F7F"};
+            QColor textChecked{"#1FAF1F"};
+            QColor text{"#000000"};
+        } buttons;
     } colors;
 };
 
@@ -75,16 +84,22 @@ Styling::Styling()
     // Colors
     DECLARE_GROUP(_colors, layers)
     DECLARE_STYLE_COLOR(layers, background);
-    DECLARE_STYLE_COLOR(layers, backgroundHovered);
     DECLARE_STYLE_COLOR(layers, backgroundDisabled);
     DECLARE_STYLE_COLOR(layers, border);
     DECLARE_STYLE_COLOR(layers, control);
     DECLARE_STYLE_COLOR(layers, foreground);
-    DECLARE_STYLE_COLOR(layers, foregroundHovered);
     DECLARE_STYLE_COLOR(layers, foregroundDisabled);
 
     DECLARE_GROUP(_colors, state)
     DECLARE_STYLE_COLOR(state, blinking);
+
+    DECLARE_GROUP(_colors, buttons)
+    DECLARE_STYLE_COLOR(buttons, iconPressed);
+    DECLARE_STYLE_COLOR(buttons, iconChecked);
+    DECLARE_STYLE_COLOR(buttons, icon);
+    DECLARE_STYLE_COLOR(buttons, textPressed);
+    DECLARE_STYLE_COLOR(buttons, textChecked);
+    DECLARE_STYLE_COLOR(buttons, text);
 
     // Sizes
     DECLARE_STYLE_SIZE2(onePoint);
@@ -100,16 +115,24 @@ Styling::Styling()
 
     DECLARE_GROUP(_sizes, widths)
     DECLARE_STYLE_SIZE(widths, pad);
+    DECLARE_STYLE_SIZE(widths, iconButton);
 }
 
 QColor Styling::hovered(QColor color)
 {
-    const auto alter = [](int channel) {
-        return channel > 224 ? channel - 12 : channel * 11 / 10;
+    const auto maxChannel =
+        std::max(color.red(), std::max(color.green(), color.blue()));
+    const auto alter = [](int channel, int maxValue) {
+        return std::min(
+            maxValue, channel > 231
+                          ? channel - 12
+                          : (channel > 182 ? channel * 11 / 10
+                                           : std::max(channel * 14 / 10, 64)));
     };
+    const auto maxValue = alter(maxChannel, 255);
 
-    return QColor(alter(color.red()), alter(color.green()), alter(color.blue()),
-                  color.alpha());
+    return QColor(alter(color.red(), maxValue), alter(color.green(), maxValue),
+                  alter(color.blue(), maxValue), color.alpha());
 }
 } // namespace ui
 } // namespace paddock

@@ -6,11 +6,31 @@
         <file>Paddock/MenuBar.qml</file>
         <file>Paddock/MenuItem.qml</file>
         <file>Paddock/Controls/qmldir</file>
+        <file>Paddock/Controls/IconButton.qml</file>
         <file>Paddock/Controls/Pad.qml</file>
+        <file>Paddock/Controls/TextButton.qml</file>
         <file>Paddock/Pads/qmldir</file>
         <file>Paddock/Pads/KorgPadKontrol.qml</file>
         <file>Paddock/Pads/KorgPadKontrol/qmldir</file>
         <file>Paddock/Pads/KorgPadKontrol/Controller.qml</file>
         <file>Paddock/Pads/KorgPadKontrol/TriggerSection.qml</file>
+    </qresource>
+
+    <qresource prefix="/paddock">
+        <file>img/curve-1.svg</file>
+        <file>img/curve-2.svg</file>
+        <file>img/curve-3.svg</file>
+        <file>img/curve-4.svg</file>
+        <file>img/curve-5.svg</file>
+        <file>img/curve-6.svg</file>
+        <file>img/curve-7.svg</file>
+        <file>img/curve-8.svg</file>
+    </qresource>
+
+    <qresource prefix="/">
+        <file>icons/default/index.theme</file>
+        <file>icons/default/32x32/flam_roll.png</file>
+        <file>icons/default/32x32/momentary.png</file>
+        <file>icons/default/32x32/toggle.png</file>
     </qresource>
 </RCC>
