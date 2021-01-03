@@ -32,6 +32,8 @@ public:
         SwitchType,
         Knob1Assigned,
         Knob2Assigned,
+        xAxisAssigned,
+        yAxisAssigned,
         Note,
         Velocity,
         Parameter,
@@ -76,7 +78,7 @@ private:
     Program* _program{nullptr};
 
     midi::korgPadKontrol::Scene::Trigger _pads[16];
-    short _knobAssignmentBits[2];
+    std::array<short, 4> _knobAssignmentBits;
 
     void updateModel();
 };

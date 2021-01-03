@@ -37,6 +37,8 @@ GridLayout {
                 hasFlamRoll: model.hasFlamRoll
                 knob1Assigned: model.knob1Assigned
                 knob2Assigned: model.knob2Assigned
+                xAxisAssigned: model.xAxisAssigned
+                yAxisAssigned: model.yAxisAssigned
 
                 isNote: model.actionType === TriggerModel.NoteAction
                 noteName: model.actionType === TriggerModel.NoteAction

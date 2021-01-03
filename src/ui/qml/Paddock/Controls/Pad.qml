@@ -30,6 +30,8 @@ MouseArea {
     property int value: 127
     property int releaseValue: 0
 
+    property bool xAxisAssigned: true
+    property bool yAxisAssigned: true
     property bool knob1Assigned: true
     property bool knob2Assigned: true
 
@@ -106,18 +108,34 @@ MouseArea {
                 text: "Port " + port
                 onClicked: root.togglePort()
             }
-            IconButton {
-                enabled: root.on
+            RowLayout {
+                spacing: 0
                 Layout.alignment: Qt.AlignRight
-                icon.name: root.isMomentary ? "momentary" : "toggle"
-                onClicked: root.toggleSwitchType()
+                IconButton {
+                    enabled: root.on
+                    icon.name: root.isMomentary ? "momentary" : "toggle"
+                    onClicked: root.toggleSwitchType()
+                }
+                IconButton {
+                    enabled: root.on
+                    checked: root.hasFlamRoll
+                    icon.name: "flam_roll"
+                    onClicked: root.toggleFlamRoll()
+                }
             }
-            IconButton {
-                enabled: root.on
+            RowLayout {
                 Layout.alignment: Qt.AlignRight
-                checked: root.hasFlamRoll
-                icon.name: "flam_roll"
-                onClicked: root.toggleFlamRoll()
+                spacing: Styling.sizes.spacings.x2
+                TextButton {
+                    text: "X"
+                    checked: root.xAxisAssigned
+                    onClicked: root.toggleKnobAssignment(2)
+                }
+                TextButton {
+                    text: "Y"
+                    checked: root.yAxisAssigned
+                    onClicked: root.toggleKnobAssignment(3)
+                }
             }
             TextButton {
                 Layout.alignment: Qt.AlignRight

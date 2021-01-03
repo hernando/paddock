@@ -34,7 +34,7 @@ Scene::Trigger& getTrigger(Scene& scene, int index)
         return scene.pedal;
     return scene.pads[index];
 }
-}
+} // namespace
 
 TriggerController::TriggerController(QObject* parent)
     : QObject(parent)
@@ -106,9 +106,22 @@ void TriggerController::toggleKnobAssignment(int pad, int knobIndex)
         return;
 
     auto scene = *_program->midiProgram().scene();
-    if (knobIndex > 1)
-        throw std::logic_error("Index out of bounds");
-    auto& knob = scene.knobs[knobIndex];
+    auto& knob = [&]() -> Scene::Knob& {
+        switch (knobIndex)
+        {
+        case 0:
+            return scene.knobs[0];
+        case 1:
+            return scene.knobs[1];
+        case 2:
+            return scene.x;
+        case 3:
+            return scene.y;
+        default:
+            throw std::logic_error("Index out of bounds");
+        }
+    }();
+
     if (pad == 16)
         knob.pedalAssigned = !knob.pedalAssigned;
     else
@@ -123,8 +136,7 @@ void TriggerController::incrementMidiChannel(int pad)
 
     auto scene = *_program->midiProgram().scene();
     auto& trigger = getTrigger(scene, pad);
-    trigger.midiChannel =
-        std::min(16, std::max(1, trigger.midiChannel + 1));
+    trigger.midiChannel = std::min(16, std::max(1, trigger.midiChannel + 1));
     _program->resetScene(std::move(scene));
 }
 
@@ -135,8 +147,7 @@ void TriggerController::decrementMidiChannel(int pad)
 
     auto scene = *_program->midiProgram().scene();
     auto& trigger = getTrigger(scene, pad);
-    trigger.midiChannel =
-        std::min(16, std::max(1, trigger.midiChannel - 1));
+    trigger.midiChannel = std::min(16, std::max(1, trigger.midiChannel - 1));
     _program->resetScene(std::move(scene));
 }
 
