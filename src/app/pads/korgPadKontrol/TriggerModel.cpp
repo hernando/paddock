@@ -22,6 +22,8 @@ QHash<int, QByteArray> TriggerModel::roleNames() const
             {static_cast<int>(Role::HasFlamRoll), "hasFlamRoll"},
             {static_cast<int>(Role::ActionType), "actionType"},
             {static_cast<int>(Role::SwitchType), "switchType"},
+            {static_cast<int>(Role::Knob1Assigned), "knob1Assigned"},
+            {static_cast<int>(Role::Knob2Assigned), "knob2Assigned"},
             {static_cast<int>(Role::Note), "note"},
             {static_cast<int>(Role::Velocity), "velocity"},
             {static_cast<int>(Role::Parameter), "parameter"},
@@ -39,7 +41,8 @@ QVariant TriggerModel::data(const QModelIndex& index, int role) const
     if (!index.isValid())
         return QVariant();
 
-    const auto& trigger = _pads[static_cast<size_t>(index.row())];
+    const auto padIndex = static_cast<size_t>(index.row());
+    const auto& trigger = _pads[padIndex];
 
     using SceneNote = midi::korgPadKontrol::Scene::Note;
     using Control = midi::korgPadKontrol::Scene::Control;
@@ -61,6 +64,12 @@ QVariant TriggerModel::data(const QModelIndex& index, int role) const
             static_cast<int>(isNote ? NoteAction : ControlAction));
     case Role::SwitchType:
         return QVariant::fromValue(static_cast<int>(trigger.type));
+    case Role::Knob1Assigned:
+        return QVariant::fromValue((_knobAssignmentBits[0] & (1 << padIndex)) !=
+                                   0);
+    case Role::Knob2Assigned:
+        return QVariant::fromValue((_knobAssignmentBits[1] & (1 << padIndex)) !=
+                                   0);
     case Role::Note:
         return isNote ? QVariant::fromValue(QString{
                             midi::noteNames[std::get<SceneNote>(trigger.action)
@@ -124,9 +133,19 @@ void TriggerModel::updateModel()
     if (!_program || !_program->hasScene())
         return; // TODO reset to default
     const auto& scene = *_program->midiProgram().scene();
+
+    const auto knob1Bits = _knobAssignmentBits[0];
+    const auto knob2Bits = _knobAssignmentBits[1];
+
+    _knobAssignmentBits[0] = scene.knobs[0].padAssignmentBits;
+    _knobAssignmentBits[1] = scene.knobs[1].padAssignmentBits;
+
     for (int i = 0; i != 16; ++i)
     {
-        if (_pads[i] != scene.pads[i])
+        const auto mask = 1 << i;
+        if (_pads[i] != scene.pads[i] ||
+            (knob1Bits & mask) != (scene.knobs[0].padAssignmentBits & mask) ||
+            (knob2Bits & mask) != (scene.knobs[1].padAssignmentBits & mask))
         {
             _pads[i] = scene.pads[i];
             emit dataChanged(index(i, 0), index(i, 0));

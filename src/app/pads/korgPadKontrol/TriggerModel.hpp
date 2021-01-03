@@ -30,6 +30,8 @@ public:
         HasFlamRoll,
         ActionType,
         SwitchType,
+        Knob1Assigned,
+        Knob2Assigned,
         Note,
         Velocity,
         Parameter,
@@ -74,6 +76,7 @@ private:
     Program* _program{nullptr};
 
     midi::korgPadKontrol::Scene::Trigger _pads[16];
+    short _knobAssignmentBits[2];
 
     void updateModel();
 };

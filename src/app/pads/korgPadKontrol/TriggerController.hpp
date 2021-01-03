@@ -28,6 +28,7 @@ public Q_SLOTS:
     void togglePort(int pad);
     void toggleSwitchType(int pad);
     void toggleFlamRoll(int pad);
+    void toggleKnobAssignment(int pad, int knob);
 
     void incrementMidiChannel(int pad);
     void decrementMidiChannel(int pad);

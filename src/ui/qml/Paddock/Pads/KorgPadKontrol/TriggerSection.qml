@@ -35,6 +35,8 @@ GridLayout {
                 port: model.port == TriggerModel.PortA ? "A" : "B"
                 isMomentary: model.switchType == TriggerModel.MomentarySwitch
                 hasFlamRoll: model.hasFlamRoll
+                knob1Assigned: model.knob1Assigned
+                knob2Assigned: model.knob2Assigned
 
                 isNote: model.actionType === TriggerModel.NoteAction
                 noteName: model.actionType === TriggerModel.NoteAction
@@ -66,6 +68,8 @@ GridLayout {
                     controller.incrementReleaseValue(index)
                 onDecrementReleaseValue:
                     controller.decrementReleaseValue(index)
+                onToggleKnobAssignment:
+                    controller.toggleKnobAssignment(index, knob)
             }
         }
     }

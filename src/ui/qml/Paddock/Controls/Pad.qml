@@ -30,6 +30,9 @@ MouseArea {
     property int value: 127
     property int releaseValue: 0
 
+    property bool knob1Assigned: true
+    property bool knob2Assigned: true
+
     signal toggleEnabled()
     signal togglePort()
     signal toggleSwitchType()
@@ -45,6 +48,8 @@ MouseArea {
     signal decrementValue()
     signal incrementReleaseValue()
     signal decrementReleaseValue()
+
+    signal toggleKnobAssignment(int knob)
 
     Rectangle {
         anchors.fill: parent
@@ -70,7 +75,7 @@ MouseArea {
             anchors.rightMargin: Styling.sizes.spacings.x2
             anchors.topMargin: Styling.sizes.spacings.x2
             width: parent.width * 1.8 / 5.0
-            spacing: Styling.sizes.spacings.x2
+            spacing: Styling.sizes.spacings.min
 
             TextButton {
                 Layout.alignment: Qt.AlignRight
@@ -113,6 +118,18 @@ MouseArea {
                 checked: root.hasFlamRoll
                 icon.name: "flam_roll"
                 onClicked: root.toggleFlamRoll()
+            }
+            TextButton {
+                Layout.alignment: Qt.AlignRight
+                text: "Knob 1"
+                checked: root.knob1Assigned
+                onClicked: root.toggleKnobAssignment(0)
+            }
+            TextButton {
+                Layout.alignment: Qt.AlignRight
+                text: "Knob 2"
+                checked: root.knob2Assigned
+                onClicked: root.toggleKnobAssignment(1)
             }
             Item {
                 Layout.fillHeight: true
