@@ -1,13 +1,9 @@
 #pragma once
 
-namespace paddock
+namespace paddock::midi
 {
-namespace midi
-{
-
 class Mapping
 {
 };
 
-} // namespace midi
-} // namespace paddock
+} // namespace paddock::midi

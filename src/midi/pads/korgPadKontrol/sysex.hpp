@@ -8,13 +8,7 @@
 
 #include <array>
 
-namespace paddock
-{
-namespace midi
-{
-namespace korgPadKontrol
-{
-namespace sysex
+namespace paddock::midi::korgPadKontrol::sysex
 {
 constexpr size_t maxMessageSize = 128;
 
@@ -291,7 +285,4 @@ constexpr auto packetCommunicationType2(std::span<const LedName> onLeds,
     return message;
 }
 
-} // namespace sysex
-} // namespace korgPadKontrol
-} // namespace midi
-} // namespace paddock
+} // namespace paddock::midi::korgPadKontrol::sysex

@@ -6,11 +6,7 @@
 
 #include "utils/encodings.hpp"
 
-namespace paddock
-{
-namespace midi
-{
-namespace korgPadKontrol
+namespace paddock::midi::korgPadKontrol
 {
 namespace
 {
@@ -465,6 +461,4 @@ bool operator==(const Scene& lhs, const Scene& rhs)
     return true;
 }
 
-} // namespace korgPadKontrol
-} // namespace midi
-} // namespace paddock
+} // namespace paddock::midi::korgPadKontrol

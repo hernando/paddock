@@ -1,10 +1,6 @@
 #pragma once
 
-namespace paddock
-{
-namespace midi
-{
-namespace korgPadKontrol
+namespace paddock::midi::korgPadKontrol
 {
 enum class LedName : char
 {
@@ -114,6 +110,4 @@ enum class WheelTurn : char
     clockwise
 };
 
-} // namespace korgPadKontrol
-} // namespace midi
-} // namespace paddock
+} // namespace paddock::midi::korgPadKontrol

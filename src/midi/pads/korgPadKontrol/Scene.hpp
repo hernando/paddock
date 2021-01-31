@@ -10,16 +10,15 @@
 #include <variant>
 #include <vector>
 
-namespace paddock
+namespace paddock::midi::korgPadKontrol
 {
-namespace midi
-{
-namespace korgPadKontrol
-{
-
 struct Scene
 {
-    enum class Port { A = 0, B = 1};
+    enum class Port
+    {
+        A = 0,
+        B = 1
+    };
 
     struct Note
     {
@@ -46,7 +45,11 @@ struct Scene
         Value7bit releaseValue;
     };
 
-    enum class SwitchType { Momentary = 0, Toggle = 1};
+    enum class SwitchType
+    {
+        Momentary = 0,
+        Toggle = 1
+    };
 
     struct Trigger
     {
@@ -58,7 +61,12 @@ struct Scene
         Port port{Port::A};
     };
 
-    enum class KnobType { PitchBend = 1, AfterTouch = 2, Controller = 3};
+    enum class KnobType
+    {
+        PitchBend = 1,
+        AfterTouch = 2,
+        Controller = 3
+    };
 
     struct Knob
     {
@@ -109,6 +117,4 @@ bool operator==(const Scene::Knob& lhs, const Scene::Knob& rhs);
 bool operator==(const Scene::Axis& lhs, const Scene::Axis& rhs);
 bool operator==(const Scene::Repeater& lhs, const Scene::Repeater& rhs);
 
-} // namespace korgPadKontrol
-} // namespace midi
-} // namespace paddock
+} // namespace paddock::midi::korgPadKontrol

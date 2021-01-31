@@ -9,11 +9,7 @@
 #include <string>
 #include <vector>
 
-namespace paddock
-{
-namespace midi
-{
-namespace alsa
+namespace paddock::midi::alsa
 {
 namespace
 {
@@ -37,12 +33,12 @@ events::Event makeEvent(const snd_seq_event_t* event)
     switch (event->type)
     {
     case SND_SEQ_EVENT_NOTE:
-        return events::Note{.channel = event->data.note.channel,
-                            .note = event->data.note.note,
-                            .velocity = event->data.note.velocity,
-                            .duration = static_cast<UValue14bit>(
-                                event->data.note.duration),
-                            .offVelocity = event->data.note.off_velocity};
+        return events::Note{
+            .channel = event->data.note.channel,
+            .note = event->data.note.note,
+            .velocity = event->data.note.velocity,
+            .duration = static_cast<UValue14bit>(event->data.note.duration),
+            .offVelocity = event->data.note.off_velocity};
 
     case SND_SEQ_EVENT_NOTEON:
         return events::NoteOn{.channel = event->data.note.channel,
@@ -542,6 +538,4 @@ snd_seq_event_t makeEvent(const events::Event& event)
     return snd_seq_event_t{};
 }
 
-} // namespace alsa
-} // namespace midi
-} // namespace paddock
+} // namespace paddock::midi::alsa

@@ -7,11 +7,8 @@
 
 #include <vector>
 
-namespace paddock
+namespace paddock::midi
 {
-namespace midi
-{
-
 template <size_t maxMessageSize>
 class SysExStreamTokenizer
 {
@@ -70,9 +67,8 @@ public:
                     continue;
                 }
 
-                auto payload =
-                    std::span<const std::byte>{_currentMessage.begin() + 1,
-                                               _currentMessage.end()};
+                auto payload = std::span<const std::byte>{
+                    _currentMessage.begin() + 1, _currentMessage.end()};
                 decoder(payload);
                 _currentMessage.clear();
             }
@@ -97,5 +93,4 @@ private:
     }
 };
 
-}
-}
+} // namespace paddock::midi

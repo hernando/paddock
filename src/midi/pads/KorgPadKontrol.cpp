@@ -24,9 +24,7 @@
 
 #include "korgPadKontrol/scenePrinters.hpp"
 
-namespace paddock
-{
-namespace midi
+namespace paddock::midi
 {
 namespace sysex
 {
@@ -645,5 +643,4 @@ Expected<korgPadKontrol::Scene> KorgPadKontrol::queryCurrentScene()
     return _impl->queryCurrentScene();
 }
 
-} // namespace midi
-} // namespace paddock
+} // namespace paddock::midi

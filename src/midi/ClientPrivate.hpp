@@ -2,9 +2,7 @@
 
 #include "Client.hpp"
 
-namespace paddock
-{
-namespace midi
+namespace paddock::midi
 {
 class AbstractClient
 {
@@ -44,15 +42,9 @@ public:
         return _client.connectOutput(other, outPort);
     }
 
-    bool hasEvents() final
-    {
-        return _client.hasEvents();
-    }
+    bool hasEvents() final { return _client.hasEvents(); }
 
-    Expected<events::Event> readEvent()
-    {
-        return _client.readEvent();
-    }
+    Expected<events::Event> readEvent() { return _client.readEvent(); }
 
     std::error_code postEvent(const events::Event& event) final
     {
@@ -74,5 +66,4 @@ inline Client::Client(Model<T> impl)
 {
 }
 
-} // namespace midi
-} // namespace paddock
+} // namespace paddock::midi

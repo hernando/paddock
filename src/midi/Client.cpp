@@ -1,9 +1,7 @@
 #include "Client.hpp"
 #include "ClientPrivate.hpp"
 
-namespace paddock
-{
-namespace midi
+namespace paddock::midi
 {
 Client::~Client() = default;
 Client::Client(Client&& other) = default;
@@ -46,5 +44,4 @@ std::shared_ptr<void> Client::pollHandle(PollEvents events) const
     return _impl->pollHandle(events);
 }
 
-} // namespace midi
-} // namespace paddock
+} // namespace paddock::midi

@@ -10,11 +10,7 @@
 #include <variant>
 #include <vector>
 
-namespace paddock
-{
-namespace midi
-{
-namespace korgPadKontrol
+namespace paddock::midi::korgPadKontrol
 {
 namespace events
 {
@@ -88,13 +84,11 @@ using OutputTypes = mp::Types<PadOutput, PedalOutput, SwitchOutput, KnobOutput,
                               WheelOutput, XyOutput>;
 using Output = mp::apply<std::variant, OutputTypes>;
 
-} // namespace events
+} // namespace paddock::midi::korgPadKontrol::events
 
 using Event = mp::apply<std::variant, events::OutputTypes>;
 using Command = mp::apply<std::variant, events::LedTypes>;
 
 std::optional<Event> decodeEvent(std::span<const std::byte> payload);
 
-} // namespace korgPadKontrol
-} // namespace midi
 } // namespace paddock

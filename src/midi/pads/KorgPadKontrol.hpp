@@ -7,9 +7,7 @@
 #include <future>
 #include <memory>
 
-namespace paddock
-{
-namespace midi
+namespace paddock::midi
 {
 class ClientInfo;
 class Engine;
@@ -18,7 +16,7 @@ namespace korgPadKontrol
 {
 class Program;
 class Scene;
-}
+} // namespace korgPadKontrol
 
 class KorgPadKontrol
 {
@@ -77,8 +75,7 @@ private:
     void _clientInEvent();
 };
 
-} // namespace midi
-} // namespace paddock
+} // namespace paddock::midi
 
 #include <system_error>
 

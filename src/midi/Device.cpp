@@ -3,9 +3,7 @@
 #include "midi/errors.hpp"
 #include "platform/alsa/RawMidi.hpp"
 
-namespace paddock
-{
-namespace midi
+namespace paddock::midi
 {
 class AbstractDevice
 {
@@ -108,5 +106,4 @@ std::shared_ptr<void> Device::pollHandle(PollEvents events) const
     return _impl->pollHandle(events);
 }
 
-} // namespace midi
-} // namespace paddock
+} // namespace paddock::midi

@@ -3,11 +3,9 @@
 #include "core/errors.hpp"
 #include "midi/errors.hpp"
 
-namespace paddock
-{
-namespace midi
-{
-namespace alsa
+#include <iostream>
+
+namespace paddock::midi::alsa
 {
 namespace
 {
@@ -22,6 +20,8 @@ class RawMidiErrorCategory : public std::error_category
         using Error = RawMidi::Error;
         switch (static_cast<Error>(code))
         {
+        case Error::deviceBusy:
+            return "MIDI device busy";
         case Error::openDeviceFailed:
             return "Could not open raw MIDI device";
         case Error::setParametersFailed:
@@ -75,6 +75,24 @@ Expected<RawMidi> RawMidi::open(const char* device, PortDirection direction)
         direction == PortDirection::duplex || direction == PortDirection::read;
     const bool write =
         direction == PortDirection::duplex || direction == PortDirection::write;
+
+    // Trying to open first in non-blocking mode. Otherwise the application
+    // will get blocked forever if another process has the device open.
+    if (int error = snd_rawmidi_open(read ? &midiIn : nullptr,
+                                     write ? &midiOut : nullptr, device,
+                                     SND_RAWMIDI_NONBLOCK);
+        error < 0)
+    {
+        if (error == -EAGAIN || error == -EBUSY)
+            return tl::make_unexpected(Error::deviceBusy);
+        return tl::make_unexpected(Error::openDeviceFailed);
+    }
+
+    // Closing to reopen in synchronous mode.
+    if (read)
+        snd_rawmidi_close(midiIn);
+    if (write)
+        snd_rawmidi_close(midiOut);
 
     if (snd_rawmidi_open(read ? &midiIn : nullptr, write ? &midiOut : nullptr,
                          device, 0) == -1)
@@ -137,8 +155,7 @@ Expected<size_t> RawMidi::read(std::span<std::byte> buffer)
     if (snd_rawmidi_status(_inHandle.get(), status) == -1)
         return tl::make_unexpected(Error::readError);
     _availableBytes = snd_rawmidi_status_get_avail(status);
-    const auto readBytes =
-        std::min(capacity, _availableBytes);
+    const auto readBytes = std::min(capacity, _availableBytes);
     _availableBytes -= readBytes;
     if (snd_rawmidi_read(_inHandle.get(), buffer.data(), readBytes) == -1)
         return tl::make_unexpected(Error::readError);
@@ -183,6 +200,4 @@ std::shared_ptr<void> RawMidi::pollHandle(PollEvents events) const
     }
 }
 
-} // namespace alsa
-} // namespace midi
-} // namespace paddock
+} // namespace paddock::midi::alsa

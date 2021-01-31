@@ -4,13 +4,7 @@
 
 #include <iostream>
 
-namespace paddock
-{
-namespace midi
-{
-namespace korgPadKontrol
-{
-namespace events
+namespace paddock::midi::korgPadKontrol::events
 {
 std::ostream& operator<<(std::ostream& out, const PadOutput& event)
 {
@@ -55,7 +49,4 @@ std::ostream& operator<<(std::ostream& out, const Event& event)
     std::visit([&out](auto&& event) { out << event; }, event);
     return out;
 }
-} // namespace events
-} // namespace korgPadKontrol
-} // namespace midi
-} // namespace paddock
+} // namespace paddock::midi::korgPadKontrol::events

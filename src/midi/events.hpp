@@ -8,11 +8,7 @@
 #include <variant>
 #include <vector>
 
-namespace paddock
-{
-namespace midi
-{
-namespace events
+namespace paddock::midi::events
 {
 // Voice events
 
@@ -354,8 +350,8 @@ using SystemEvent = mp::apply<std::variant, SystemTypes>;
 using MiscTypes =
     mp::Types<TuneRequest, Reset, ActiveSensing, Echo, Bounce, None, Unknown>;
 
-using MidiTypes = mp::join<VoiceTypes, ControlTypes, QueueTypes,
-                          UserTypes, SystemTypes, MiscTypes>;
+using MidiTypes = mp::join<VoiceTypes, ControlTypes, QueueTypes, UserTypes,
+                           SystemTypes, MiscTypes>;
 
 using Event = mp::apply<std::variant, MidiTypes>;
 
@@ -421,6 +417,4 @@ using EngineTypes =
               PortChange, PortSubscribed, PortUnsubscribed>;
 using EngineEvent = mp::apply<std::variant, EngineTypes>;
 
-} // namespace events
-} // namespace midi
-} // namespace paddock
+} // namespace paddock::midi::events

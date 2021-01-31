@@ -5,11 +5,8 @@
 #include <memory>
 #include <string>
 
-namespace paddock
+namespace paddock::midi
 {
-namespace midi
-{
-
 struct PortInfo
 {
     std::string name;
@@ -26,5 +23,4 @@ struct PortInfo
     std::string hwDeviceId;
 };
 
-} // namespace midi
-} // namespace paddock
+} // namespace paddock::midi

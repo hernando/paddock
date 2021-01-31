@@ -1,10 +1,7 @@
 #pragma once
 
-namespace paddock
+namespace paddock::midi
 {
-namespace midi
-{
-
 enum class ClientType
 {
     user,
@@ -30,5 +27,4 @@ enum class PortType
     software
 };
 
-}
-}
+} // namespace paddock::midi

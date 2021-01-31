@@ -1,12 +1,7 @@
 #include "utils.hpp"
 
-namespace paddock
+namespace paddock::midi::alsa
 {
-namespace midi
-{
-namespace alsa
-{
-
 ClientId makeClientId(snd_seq_client_info_t* info)
 {
     snd_seq_client_info_t* copy;
@@ -16,6 +11,4 @@ ClientId makeClientId(snd_seq_client_info_t* info)
     return std::shared_ptr<void>(copy, snd_seq_client_info_free);
 }
 
-}
-}
-}
+} // namespace paddock::midi::alsa

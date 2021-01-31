@@ -2,9 +2,7 @@
 
 #include "core/errors.hpp"
 
-namespace paddock
-{
-namespace midi
+namespace paddock::midi
 {
 namespace
 {
@@ -119,5 +117,4 @@ std::error_code make_error_code(ProgramError error)
     return std::error_code{static_cast<int>(error), programErrorCategory};
 }
 
-} // namespace midi
-} // namespace paddock
+} // namespace paddock::midi

@@ -3,9 +3,7 @@
 
 #include <iostream>
 
-namespace paddock
-{
-namespace midi
+namespace paddock::midi
 {
 std::ostream& operator<<(std::ostream& out, const events::NoteOn& event)
 {
@@ -56,5 +54,4 @@ std::ostream& operator<<(std::ostream& out, const events::Event& event)
     return out;
 }
 
-} // namespace midi
-} // namespace paddock
+} // namespace paddock::midi

@@ -1,7 +1,5 @@
 #pragma once
-namespace paddock
-{
-namespace midi
+namespace paddock::midi
 {
 constexpr const char* noteNames[] = {
     "C-", "C#-", "D-", "D#-", "E-", "F-", "F#-", "G-", "G#-", "A-", "A#-", "B-",
@@ -16,5 +14,5 @@ constexpr const char* noteNames[] = {
     "C7", "C#7", "D7", "D#7", "E7", "F7", "F#7", "G7", "G#7", "A7", "A#7", "B7",
     "C8", "C#8", "D8", "D#8", "E8", "F8", "F#8", "G8", "G#8", "A8", "A#8", "B8",
     "C9", "C#9", "D9", "D#9", "E9", "F9", "F#9", "G9"};
-}
-} // namespace paddock
+
+} // namespace paddock::midi

@@ -2,9 +2,7 @@
 
 #include <system_error>
 
-namespace paddock
-{
-namespace midi
+namespace paddock::midi
 {
 enum class DeviceError
 {
@@ -33,8 +31,7 @@ std::error_code make_error_code(DeviceError error);
 std::error_code make_error_code(EngineError error);
 std::error_code make_error_code(ProgramError error);
 
-} // namespace midi
-} // namespace paddock
+} // namespace paddock::midi
 
 #include <system_error>
 

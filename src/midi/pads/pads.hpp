@@ -4,12 +4,7 @@
 
 #include "KorgPadKontrol.hpp"
 
-namespace paddock
+namespace paddock::midi
 {
-namespace midi
-{
-
 using Pad = std::variant<KorgPadKontrol>;
-
-}
 }

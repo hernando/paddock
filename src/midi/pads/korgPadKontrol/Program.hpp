@@ -8,16 +8,13 @@
 #include <functional>
 #include <optional>
 
-namespace paddock
-{
-namespace midi
+namespace paddock::midi
 {
 class Client;
 class Device;
 
 namespace korgPadKontrol
 {
-
 class Program
 {
 public:
@@ -36,6 +33,5 @@ private:
     std::optional<Scene> _scene;
 };
 
-}
-}
-}
+} // namespace korgPadKontrol
+} // namespace paddock::midi

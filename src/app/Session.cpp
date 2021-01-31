@@ -132,8 +132,19 @@ public:
             });
 
         auto controller = makePad(_parent, &*_midiEngine, name());
-        _padController = controller ? std::make_optional(std::move(*controller))
-                                    : std::nullopt;
+
+        if (controller)
+        {
+            _padController = std::make_optional(std::move(*controller));
+        }
+        else
+        {
+            if (controller.error() != midi::EngineError::noDeviceFound)
+            {
+                return controller.error();
+            }
+            _padController = std::nullopt;
+        }
 
         emit _parent->controllerChanged();
 

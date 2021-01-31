@@ -10,18 +10,15 @@
 #include <memory>
 #include <span>
 
-namespace paddock
-{
-namespace midi
-{
-namespace alsa
+namespace paddock::midi::alsa
 {
 class RawMidi
 {
 public:
     enum class Error
     {
-        openDeviceFailed = 1,
+        deviceBusy = 1,
+        openDeviceFailed,
         setParametersFailed,
         readError,
         writeError
@@ -61,9 +58,7 @@ private:
     RawMidi(Handle inHandle, Handle outHandle);
 };
 
-} // namespace alsa
-} // namespace midi
-} // namespace paddock
+} // namespace paddock::midi::alsa
 
 #include <system_error>
 

@@ -9,9 +9,7 @@
 #include <string>
 #include <vector>
 
-namespace paddock
-{
-namespace midi
+namespace paddock::midi
 {
 struct ClientInfo
 {
@@ -65,5 +63,4 @@ private:
     Client(Model<T> impl);
 };
 
-} // namespace midi
-} // namespace paddock
+} // namespace paddock::midi

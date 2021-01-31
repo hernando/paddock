@@ -8,9 +8,7 @@
 #include <memory>
 #include <span>
 
-namespace paddock
-{
-namespace midi
+namespace paddock::midi
 {
 class AbstractDevice;
 
@@ -71,5 +69,4 @@ private:
     Device(Model<T> impl);
 };
 
-} // namespace midi
-} // namespace paddock
+} // namespace paddock::midi

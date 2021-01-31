@@ -7,11 +7,7 @@
 
 #include <alsa/asoundlib.h>
 
-namespace paddock
-{
-namespace midi
-{
-namespace alsa
+namespace paddock::midi::alsa
 {
 namespace
 {
@@ -104,10 +100,9 @@ tl::expected<Sequencer, std::error_code> Sequencer::open(
     std::vector<PortInfo> input;
     if (isWrite(direction))
     {
-        auto inPort =
-            createPort("paddock:in",
-                       SND_SEQ_PORT_CAP_WRITE | SND_SEQ_PORT_CAP_SUBS_WRITE,
-                       SND_SEQ_PORT_TYPE_APPLICATION);
+        auto inPort = createPort(
+            "paddock:in", SND_SEQ_PORT_CAP_WRITE | SND_SEQ_PORT_CAP_SUBS_WRITE,
+            SND_SEQ_PORT_TYPE_APPLICATION);
         if (!inPort)
             return tl::unexpected(make_error_code(Error::portCreationFailed));
         input.push_back(PortInfo{std::move(*inPort)});
@@ -116,10 +111,9 @@ tl::expected<Sequencer, std::error_code> Sequencer::open(
     std::vector<PortInfo> output;
     if (isRead(direction))
     {
-        auto outPort =
-            createPort("paddock:out",
-                       SND_SEQ_PORT_CAP_READ | SND_SEQ_PORT_CAP_SUBS_READ,
-                       SND_SEQ_PORT_TYPE_PORT);
+        auto outPort = createPort(
+            "paddock:out", SND_SEQ_PORT_CAP_READ | SND_SEQ_PORT_CAP_SUBS_READ,
+            SND_SEQ_PORT_TYPE_PORT);
         if (!outPort)
             return tl::unexpected(make_error_code(Error::portCreationFailed));
         output.push_back(PortInfo{std::move(*outPort)});
@@ -184,17 +178,17 @@ std::error_code Sequencer::connectInput(const ClientInfo& source,
     if (snd_seq_subscribe_port(_handle.get(), subs) == -1)
         return Error::portSubscriptionFailed;
 
-//    sender.client = SND_SEQ_CLIENT_SYSTEM;
-//    sender.port = SND_SEQ_PORT_SYSTEM_ANNOUNCE;
-//    dest.client = snd_seq_client_id(_handle.get());
-//    dest.port = _clientInfo.inputs[0].number;
-//    snd_seq_port_subscribe_set_sender(subs, &sender);
-//    snd_seq_port_subscribe_set_dest(subs, &dest);
-//    snd_seq_port_subscribe_set_queue(subs, 1);
-//    snd_seq_port_subscribe_set_time_update(subs, 1);
-//    snd_seq_port_subscribe_set_time_real(subs, 1);
-//    if (snd_seq_subscribe_port(_handle.get(), subs) == -1)
-//        return Error::portSubscriptionFailed;
+    //    sender.client = SND_SEQ_CLIENT_SYSTEM;
+    //    sender.port = SND_SEQ_PORT_SYSTEM_ANNOUNCE;
+    //    dest.client = snd_seq_client_id(_handle.get());
+    //    dest.port = _clientInfo.inputs[0].number;
+    //    snd_seq_port_subscribe_set_sender(subs, &sender);
+    //    snd_seq_port_subscribe_set_dest(subs, &dest);
+    //    snd_seq_port_subscribe_set_queue(subs, 1);
+    //    snd_seq_port_subscribe_set_time_update(subs, 1);
+    //    snd_seq_port_subscribe_set_time_real(subs, 1);
+    //    if (snd_seq_subscribe_port(_handle.get(), subs) == -1)
+    //        return Error::portSubscriptionFailed;
 
     // TODO check errors;
     return std::error_code{};
@@ -254,6 +248,4 @@ std::error_code Sequencer::_postEvent(snd_seq_event_t* event)
     return std::error_code{};
 }
 
-} // namespace alsa
-} // namespace midi
-} // namespace paddock
+} // namespace paddock::midi::alsa

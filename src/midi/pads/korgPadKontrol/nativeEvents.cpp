@@ -3,11 +3,7 @@
 
 #include <iostream>
 
-namespace paddock
-{
-namespace midi
-{
-namespace korgPadKontrol
+namespace paddock::midi::korgPadKontrol
 {
 std::optional<Event> decodeEvent(std::span<const std::byte> message)
 {
@@ -68,6 +64,4 @@ std::optional<Event> decodeEvent(std::span<const std::byte> message)
     return std::nullopt;
 }
 
-} // namespace korgPadKontrol
-} // namespace midi
-} // namespace paddock
+} // namespace paddock::midi::korgPadKontrol

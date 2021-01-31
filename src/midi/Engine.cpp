@@ -17,9 +17,7 @@
 
 #include <iostream>
 
-namespace paddock
-{
-namespace midi
+namespace paddock::midi
 {
 class AbstractEngine
 {
@@ -209,5 +207,4 @@ void Engine::setEngineEventCallback(EngineEventCallback callback)
     return _impl->setEngineEventCallback(callback);
 }
 
-} // namespace midi
-} // namespace paddock
+} // namespace paddock::midi

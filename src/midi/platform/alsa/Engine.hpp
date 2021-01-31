@@ -5,14 +5,10 @@
 #include "midi/Client.hpp"
 #include "midi/events.hpp"
 
-#include <optional>
 #include <mutex>
+#include <optional>
 
-namespace paddock
-{
-namespace midi
-{
-namespace alsa
+namespace paddock::midi::alsa
 {
 using ClientIds = std::tuple<int, ClientId>;
 
@@ -56,6 +52,4 @@ private:
     void _processEvent(const events::EngineEvent& event);
     void _updateClientInfo(const ClientId& id);
 };
-} // namespace alsa
-} // namespace midi
-} // namespace paddock
+} // namespace paddock::midi::alsa

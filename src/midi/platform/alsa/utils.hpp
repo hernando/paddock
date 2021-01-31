@@ -4,16 +4,10 @@
 
 #include <alsa/asoundlib.h>
 
-namespace paddock
-{
-namespace midi
-{
-namespace alsa
+namespace paddock::midi::alsa
 {
 using ClientIds = std::tuple<int, ClientId>;
 
 ClientId makeClientId(snd_seq_client_info_t* info);
 
-} // namespace alsa
-} // namespace midi
-} // namespace paddock
+} // namespace paddock::midi::alas

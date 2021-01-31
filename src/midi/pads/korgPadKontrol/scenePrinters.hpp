@@ -5,13 +5,10 @@
 
 #include <iostream>
 
-namespace paddock
+namespace paddock::midi::korgPadKontrol
 {
-namespace midi
-{
-namespace korgPadKontrol
-{
-inline std::ostream& operator<<(std::ostream& out, const Scene::Trigger& trigger)
+inline std::ostream& operator<<(std::ostream& out,
+                                const Scene::Trigger& trigger)
 {
     out << (trigger.enabled ? 'e' : 'd') << int(trigger.midiChannel);
     out << (trigger.type == Scene::SwitchType::Toggle ? 't' : 'm');
@@ -64,7 +61,8 @@ inline std::ostream& operator<<(std::ostream& out, const Scene::Axis& axis)
     return out;
 }
 
-inline std::ostream& operator<<(std::ostream& out, const Scene::Repeater& repeater)
+inline std::ostream& operator<<(std::ostream& out,
+                                const Scene::Repeater& repeater)
 {
     out << "speed " << int(repeater.minSpeed) << '-' << int(repeater.maxSpeed)
         << " volume " << int(repeater.minVolume) << '-'
@@ -90,6 +88,4 @@ inline std::ostream& operator<<(std::ostream& out, const Scene& scene)
     return out;
 }
 
-} // namespace korgPadKontrol
-} // namespace midi
-} // namespace paddock
+} // namespace paddock::midi::korgPadKontrol

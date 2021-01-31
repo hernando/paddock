@@ -6,13 +6,10 @@
 
 #include <iostream>
 
-namespace paddock
-{
-namespace midi
+namespace paddock::midi
 {
 namespace korgPadKontrol
 {
-
 void Program::setScene(Scene scene)
 {
     _scene = std::move(scene);
@@ -37,5 +34,4 @@ void Program::processEvent(const midi::events::Event& event, Client& client)
 }
 
 } // namespace korgPadKontrol
-} // namespace midi
-} // namespace paddock
+} // namespace paddock::midi

@@ -5,11 +5,7 @@
 typedef struct snd_seq_event snd_seq_event_t;
 typedef struct _snd_seq snd_seq_t;
 
-namespace paddock
-{
-namespace midi
-{
-namespace alsa
+namespace paddock::midi::alsa
 {
 events::Event makeEvent(const snd_seq_event_t* event);
 
@@ -22,6 +18,4 @@ std::optional<events::EngineEvent> makeEvent(
 // a pointer to the data will be stored.
 snd_seq_event_t makeEvent(const events::Event& event);
 
-} // namespace alsa
-} // namespace midi
-} // namespace paddock
+} // namespace paddock::midi::alsa

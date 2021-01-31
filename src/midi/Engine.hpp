@@ -10,9 +10,7 @@
 
 #include <memory>
 
-namespace paddock
-{
-namespace midi
+namespace paddock::midi
 {
 class AbstractEngine;
 class ClientInfo;
@@ -68,5 +66,4 @@ private:
     Engine(T&& engine);
 };
 
-} // namespace midi
-} // namespace paddock
+} // namespace paddock::midi

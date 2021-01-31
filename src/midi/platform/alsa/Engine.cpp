@@ -10,11 +10,7 @@
 
 #include <map>
 
-namespace paddock
-{
-namespace midi
-{
-namespace alsa
+namespace paddock::midi::alsa
 {
 namespace
 {
@@ -467,6 +463,4 @@ void Engine::_updateClientInfo(const ClientId& id)
     }
 }
 
-} // namespace alsa
-} // namespace midi
-} // namespace paddock
+} // namespace paddock::midi::alsa

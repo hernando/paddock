@@ -11,11 +11,7 @@
 #include <system_error>
 #include <thread>
 
-namespace paddock
-{
-namespace midi
-{
-namespace alsa
+namespace paddock::midi::alsa
 {
 class Sequencer
 {
@@ -66,9 +62,7 @@ private:
     std::error_code _postEvent(snd_seq_event_t* event);
 };
 
-} // namespace alsa
-} // namespace midi
-} // namespace paddock
+} // namespace paddock::midi::alsa
 
 #include <system_error>
 
