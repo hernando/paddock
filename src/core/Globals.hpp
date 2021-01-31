@@ -1,8 +1,6 @@
 #pragma once
 
-namespace paddock
-{
-namespace core
+namespace paddock::core
 {
 class Globals
 {
@@ -12,5 +10,4 @@ public:
 
     static Globals& instance();
 };
-} // namespace core
-} // namespace paddock
+} // namespace paddock::core

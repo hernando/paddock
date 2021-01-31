@@ -4,11 +4,8 @@
 #include <future>
 #include <memory>
 
-namespace paddock
+namespace paddock::core
 {
-namespace core
-{
-
 /// An encapsulation of a platform specific handle for polling.
 /// The identity of the handler is the value of the stored pointer.
 /// The same pointer mustn't be added to Poller with a different callback.
@@ -42,5 +39,4 @@ private:
     std::unique_ptr<_Impl> _impl;
 };
 
-} // namespace core
-} // namespace paddock
+} // namespace paddock::core

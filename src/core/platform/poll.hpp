@@ -8,11 +8,8 @@
 #include <span>
 #include <system_error>
 
-namespace paddock
+namespace paddock::core
 {
-namespace core
-{
-
 struct PollDescriptor
 {
     PollHandle handle;
@@ -27,7 +24,6 @@ struct PollDescriptor
 //  std::bad_alloc for ENOMEM.
 /// @return the number of descriptors with events or an error.
 Expected<unsigned int> poll(std::span<PollDescriptor>,
-                             std::chrono::milliseconds timeout);
+                            std::chrono::milliseconds timeout);
 
-} // namespace core
-} // namespace paddock
+} // namespace paddock::core

@@ -2,11 +2,8 @@
 
 #include <QString>
 
-namespace paddock
-{
-namespace ui
+namespace paddock::ui
 {
 void initResources();
 QString qmlResourcePath();
-}
-}
+} // namespace paddock::ui

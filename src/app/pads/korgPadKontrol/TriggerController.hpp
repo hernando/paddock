@@ -1,12 +1,8 @@
 #pragma once
 
-#include "midi/pads/korgPadKontrol/Scene.hpp"
-
 #include <QObject>
 
-namespace paddock
-{
-namespace korgPadKontrol
+namespace paddock::korgPadKontrol
 {
 class Program;
 
@@ -52,5 +48,4 @@ private:
     Program* _program{nullptr};
 };
 
-} // namespace korgPadKontrol
-} // namespace paddock
+} // namespace paddock::korgPadKontrol

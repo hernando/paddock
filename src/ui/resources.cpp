@@ -2,8 +2,8 @@
 
 #include "module.hpp"
 
-#include <QtGlobal>
 #include <QIcon>
+#include <QtGlobal>
 
 void initUiResources()
 {
@@ -12,9 +12,7 @@ void initUiResources()
     QIcon::setThemeSearchPaths(QStringList() << ":/icons");
 }
 
-namespace paddock
-{
-namespace ui
+namespace paddock::ui
 {
 void initResources()
 {
@@ -26,5 +24,4 @@ QString qmlResourcePath()
 {
     return "qrc:/paddock/";
 }
-}
-}
+} // namespace paddock::ui

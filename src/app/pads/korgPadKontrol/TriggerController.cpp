@@ -6,11 +6,7 @@
 
 #include "utils/overloaded.hpp"
 
-#include <iostream>
-
-namespace paddock
-{
-namespace korgPadKontrol
+namespace paddock::korgPadKontrol
 {
 using Value7bit = midi::Value7bit;
 using Scene = midi::korgPadKontrol::Scene;
@@ -329,5 +325,4 @@ void TriggerController::decrementReleaseValue(int pad)
     _program->resetScene(std::move(scene));
 }
 
-} // namespace korgPadKontrol
-} // namespace paddock
+} // namespace paddock::korgPadKontrol

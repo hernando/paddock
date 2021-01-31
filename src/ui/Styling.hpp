@@ -1,9 +1,7 @@
 #include <QColor>
 #include <QQmlPropertyMap>
 
-namespace paddock
-{
-namespace ui
+namespace paddock::ui
 {
 class Styling : public QObject
 {
@@ -25,5 +23,4 @@ private:
     QQmlPropertyMap* _sizes{nullptr};
     QQmlPropertyMap* _colors{nullptr};
 };
-}
-}
+} // namespace paddock::ui

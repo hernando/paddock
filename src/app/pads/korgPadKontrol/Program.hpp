@@ -4,9 +4,7 @@
 
 #include "midi/pads/korgPadKontrol/Program.hpp"
 
-namespace paddock
-{
-namespace korgPadKontrol
+namespace paddock::korgPadKontrol
 {
 class Program : public paddock::Program
 {
@@ -25,5 +23,4 @@ private:
     midi::korgPadKontrol::Program _program;
 };
 
-} // namespace korgPadKontrol
-} // namespace paddock
+} // namespace paddock::korgPadKontrol

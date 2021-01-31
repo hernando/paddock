@@ -5,9 +5,7 @@
 #include "midi/noteNames.hpp"
 #include "utils/overloaded.hpp"
 
-namespace paddock
-{
-namespace korgPadKontrol
+namespace paddock::korgPadKontrol
 {
 TriggerModel::TriggerModel(QObject* parent)
     : QAbstractListModel(parent)
@@ -164,5 +162,4 @@ void TriggerModel::updateModel()
     }
 }
 
-} // namespace korgPadKontrol
-} // namespace paddock
+} // namespace paddock::korgPadKontrol

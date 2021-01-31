@@ -7,9 +7,7 @@
 #include <thread>
 #include <vector>
 
-namespace paddock
-{
-namespace core
+namespace paddock::core
 {
 namespace
 {
@@ -43,10 +41,9 @@ public:
     {
         std::lock_guard<std::mutex> lock(_mutex);
 
-        auto iter = std::remove_if(_descriptors.begin(), _descriptors.end(),
-                           [&handle](const PollDescriptor& x) {
-                               return x.handle == handle;
-                           });
+        auto iter = std::remove_if(
+            _descriptors.begin(), _descriptors.end(),
+            [&handle](const PollDescriptor& x) { return x.handle == handle; });
 
         // Don't return a waiting future if handle is not in the descriptors.
         if (iter == _descriptors.end())
@@ -86,7 +83,8 @@ private:
 
                 _isThreadWaiting = true;
                 _condition.wait(lock, [this] {
-                        return !_descriptors.empty() || !_isRunning; });
+                    return !_descriptors.empty() || !_isRunning;
+                });
                 _isThreadWaiting = false;
                 // This copy wouldn't be efficient if a large number of
                 // descriptors needs to be handled, but this is not our case.
@@ -122,5 +120,4 @@ std::future<void> Poller::remove(const PollHandle& handle)
     return _impl->remove(handle);
 }
 
-} // namespace core
-} // namespace paddock
+} // namespace paddock::core

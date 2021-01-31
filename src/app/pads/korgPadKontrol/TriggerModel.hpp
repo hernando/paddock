@@ -4,9 +4,7 @@
 
 #include <QAbstractListModel>
 
-namespace paddock
-{
-namespace korgPadKontrol
+namespace paddock::korgPadKontrol
 {
 class Program;
 
@@ -83,5 +81,4 @@ private:
     void updateModel();
 };
 
-} // namespace korgPadKontrol
-} // namespace paddock
+} // namespace paddock::korgPadKontrol

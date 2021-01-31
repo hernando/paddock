@@ -16,9 +16,7 @@
     _sizes->insert(QStringLiteral(#name), \
                    QVariant::fromValue(_scaling* data.sizes.name))
 
-namespace paddock
-{
-namespace ui
+namespace paddock::ui
 {
 struct StylingData
 {
@@ -134,5 +132,4 @@ QColor Styling::hovered(QColor color)
     return QColor(alter(color.red(), maxValue), alter(color.green(), maxValue),
                   alter(color.blue(), maxValue), color.alpha());
 }
-} // namespace ui
-} // namespace paddock
+} // namespace paddock::ui

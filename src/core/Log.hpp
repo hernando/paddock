@@ -2,9 +2,7 @@
 
 #include <sstream>
 
-namespace paddock
-{
-namespace core
+namespace paddock::core
 {
 class Log;
 class LogMessage
@@ -38,8 +36,7 @@ LogMessage& LogMessage::operator<<(const T& val)
     if (_text.tellp())
         _text << ' ';
     _text << val;
-             return *this;
+    return *this;
 }
 
-} // namespace core
-} // namespace paddock
+} // namespace paddock::core

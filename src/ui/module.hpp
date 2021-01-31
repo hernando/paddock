@@ -1,9 +1,6 @@
 #pragma once
 
-namespace paddock
-{
-namespace ui
+namespace paddock::ui
 {
 void registerQmlModule();
-} // namespace ui
-} // namespace paddock
+} // namespace paddock::ui

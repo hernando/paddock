@@ -10,9 +10,7 @@
 
 #include <iostream>
 
-namespace paddock
-{
-namespace core
+namespace paddock::core
 {
 namespace
 {
@@ -188,10 +186,9 @@ private:
         server.add_method(NSM_CLIENT_SAVE, "",
                           [this](lo_arg**, int) { this->notifySave(); });
 
-        server.add_method(NSM_CLIENT_SESSION_IS_LOADED, "",
-                          [this](lo_arg** argv, int argc) {
-                              this->notifySessionLoaded();
-                          });
+        server.add_method(
+            NSM_CLIENT_SESSION_IS_LOADED, "",
+            [this](lo_arg** argv, int argc) { this->notifySessionLoaded(); });
 
         server.add_method(nullptr, nullptr, [](lo_arg** argv, int argc) {
             log() << "broadcast";
@@ -323,5 +320,4 @@ void NsmSession::setDirty(bool dirty)
     _impl->sendDirty(dirty);
 }
 
-} // namespace core
-} // namespace paddock
+} // namespace paddock::core

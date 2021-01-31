@@ -8,11 +8,7 @@
 
 #include <iostream>
 
-namespace paddock
-{
-namespace core
-{
-namespace posix
+namespace paddock::core::posix
 {
 Expected<unsigned int> poll(std::span<PollDescriptor> descriptors,
                             std::chrono::milliseconds timeout)
@@ -47,14 +43,11 @@ Expected<unsigned int> poll(std::span<PollDescriptor> descriptors,
             auto& descriptor = descriptors[i];
             if (fds[i].revents != 0 && descriptor.callback)
             {
-                descriptor.callback(descriptor.handle.get(),
-                                    fds[i].revents);
+                descriptor.callback(descriptor.handle.get(), fds[i].revents);
             }
         }
         return result;
     }
 }
 
-} // namespace posix
-} // namespace core
-} // namespace paddock
+} // namespace paddock::core::posix

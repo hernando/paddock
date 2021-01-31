@@ -7,9 +7,7 @@
 
 #include <system_error>
 
-namespace paddock
-{
-namespace core
+namespace paddock::core
 {
 class NsmSession
 {
@@ -53,8 +51,7 @@ private:
 
     NsmSession(std::unique_ptr<_Impl>);
 };
-} // namespace core
-} // namespace paddock
+} // namespace paddock::core
 
 #include <system_error>
 

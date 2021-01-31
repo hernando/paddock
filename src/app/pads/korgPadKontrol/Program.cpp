@@ -1,8 +1,6 @@
 #include "Program.hpp"
 
-namespace paddock
-{
-namespace korgPadKontrol
+namespace paddock::korgPadKontrol
 {
 Program::Program(QObject* parent)
     : paddock::Program(parent)
@@ -25,5 +23,4 @@ void Program::resetScene(midi::korgPadKontrol::Scene scene)
     emit changed();
 }
 
-} // namespace korgPadKontrol
-} // namespace paddock
+} // namespace paddock::korgPadKontrol

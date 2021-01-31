@@ -2,9 +2,7 @@
 
 #include <system_error>
 
-namespace paddock
-{
-namespace core
+namespace paddock::core
 {
 enum class Error
 {
@@ -21,8 +19,7 @@ enum class ErrorType
 
 std::error_code make_error_code(Error error);
 std::error_condition make_error_condition(ErrorType error);
-} // namespace core
-} // namespace paddock
+} // namespace paddock::core
 
 namespace std
 {

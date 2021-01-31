@@ -1,8 +1,6 @@
 #include "errors.hpp"
 
-namespace paddock
-{
-namespace core
+namespace paddock::core
 {
 namespace
 {
@@ -59,5 +57,4 @@ std::error_condition make_error_condition(ErrorType error)
                                 paddockErrorTypeCategory};
 }
 
-} // namespace
-} // namespace core
+} // namespace paddock::core

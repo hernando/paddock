@@ -2,11 +2,8 @@
 
 #include "posix/poll.hpp"
 
-namespace paddock
+namespace paddock::core
 {
-namespace core
-{
-
 Expected<unsigned int> poll(std::span<PollDescriptor> descriptors,
                             std::chrono::milliseconds timeout)
 {
@@ -17,6 +14,4 @@ Expected<unsigned int> poll(std::span<PollDescriptor> descriptors,
 #endif
 }
 
-} // namespace core
-} // namespace paddock
-
+} // namespace paddock::core

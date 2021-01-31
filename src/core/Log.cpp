@@ -7,9 +7,7 @@
 
 #include <iostream>
 
-namespace paddock
-{
-namespace core
+namespace paddock::core
 {
 namespace
 {
@@ -61,5 +59,4 @@ LogMessage log()
     return LogMessage(&log);
 }
 
-} // namespace core
-} // namespace paddock
+} // namespace paddock::core
