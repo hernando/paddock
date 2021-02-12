@@ -1,4 +1,6 @@
 module Paddock.Controls
+Button 1.0 Button.qml
 IconButton 1.0 IconButton.qml
+Knob 1.0 Knob.qml
 Pad 1.0 Pad.qml
 TextButton 1.0 TextButton.qml

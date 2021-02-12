@@ -11,6 +11,10 @@ target_sources(paddock PRIVATE
 
   pads/KorgPadKontrol.hpp
   pads/KorgPadKontrol.cpp
+  pads/korgPadKontrol/KnobController.hpp
+  pads/korgPadKontrol/KnobController.cpp
+  pads/korgPadKontrol/KnobModel.hpp
+  pads/korgPadKontrol/KnobModel.cpp
   pads/korgPadKontrol/Program.hpp
   pads/korgPadKontrol/Program.cpp
   pads/korgPadKontrol/TriggerController.hpp

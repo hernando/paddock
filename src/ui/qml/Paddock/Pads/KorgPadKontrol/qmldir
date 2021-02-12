@@ -1,3 +1,4 @@
 module Paddock.Pads.KorgPadKontrol
 Controller 1.0 Controller.qml
+KnobSection 1.0 KnobSection.qml
 TriggerSection 1.0 TriggerSection.qml

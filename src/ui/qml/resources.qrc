@@ -7,12 +7,14 @@
         <file>Paddock/MenuItem.qml</file>
         <file>Paddock/Controls/qmldir</file>
         <file>Paddock/Controls/IconButton.qml</file>
+        <file>Paddock/Controls/Knob.qml</file>
         <file>Paddock/Controls/Pad.qml</file>
         <file>Paddock/Controls/TextButton.qml</file>
         <file>Paddock/Pads/qmldir</file>
         <file>Paddock/Pads/KorgPadKontrol.qml</file>
         <file>Paddock/Pads/KorgPadKontrol/qmldir</file>
         <file>Paddock/Pads/KorgPadKontrol/Controller.qml</file>
+        <file>Paddock/Pads/KorgPadKontrol/KnobSection.qml</file>
         <file>Paddock/Pads/KorgPadKontrol/TriggerSection.qml</file>
     </qresource>
 

@@ -3,6 +3,8 @@
 #include "Session.hpp"
 #include "pads/KorgPadKontrol.hpp"
 #include "pads/korgPadKontrol/Program.hpp"
+#include "pads/korgPadKontrol/KnobController.hpp"
+#include "pads/korgPadKontrol/KnobModel.hpp"
 #include "pads/korgPadKontrol/TriggerController.hpp"
 #include "pads/korgPadKontrol/TriggerModel.hpp"
 
@@ -49,6 +51,8 @@ void registerKorgPadKontrolTypes()
     using namespace korgPadKontrol;
 
     module.registerUncreatableType<korgPadKontrol::Program>("Program");
+    module.registerType<KnobController>("KnobController");
+    module.registerType<KnobModel>("KnobModel");
     module.registerType<TriggerController>("TriggerController");
     module.registerType<TriggerModel>("TriggerModel");
 }
