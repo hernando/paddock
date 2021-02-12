@@ -8,8 +8,10 @@ import Paddock.Pads 1.0
 ApplicationWindow {
     id: root
 
-    width: 1250
-    height: 950
+    minimumHeight: height
+    minimumWidth: width
+    maximumHeight: height
+    maximumWidth: width
 
     property Session session: globalSession
 
@@ -20,8 +22,18 @@ ApplicationWindow {
     }
 
     ControllerLayout {
+        id: layout
+
         device: session.controller
-        anchors.fill: parent
+
+        onReloaded: {
+            root.width = Math.max(400, layout.implicitWidth)
+            root.height = Math.max(400, layout.implicitHeight) + menuBar.height
+            root.minimumHeight = root.height
+            root.minimumWidth = root.width
+            root.maximumHeight = root.height
+            root.maximumWidth = root.width
+        }
     }
 
     background: Rectangle {

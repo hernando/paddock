@@ -39,9 +39,21 @@ struct StylingData
 
         struct Widths
         {
-            int pad{48};
+            int pad{120};
             int iconButton{24};
+            int button{60};
         } widths;
+
+        struct Heights
+        {
+            int button{36};
+            int smallButton{24};
+        } heights;
+
+        struct Fonts
+        {
+            int title{16};
+        } fonts;
     } sizes;
 
     struct Colors
@@ -114,6 +126,14 @@ Styling::Styling()
     DECLARE_GROUP(_sizes, widths)
     DECLARE_STYLE_SIZE(widths, pad);
     DECLARE_STYLE_SIZE(widths, iconButton);
+    DECLARE_STYLE_SIZE(widths, button);
+
+    DECLARE_GROUP(_sizes, heights)
+    DECLARE_STYLE_SIZE(heights, button);
+    DECLARE_STYLE_SIZE(heights, smallButton);
+
+    DECLARE_GROUP(_sizes, fonts)
+    DECLARE_STYLE_SIZE(fonts, title);
 }
 
 QColor Styling::hovered(QColor color)

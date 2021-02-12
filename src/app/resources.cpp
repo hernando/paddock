@@ -10,27 +10,60 @@
 
 Q_DECLARE_METATYPE(std::error_code);
 
+struct QmlModule
+{
+    QmlModule(const char* name)
+        : _moduleName(name)
+    {
+    }
+
+    template <typename T>
+    void registerType(const char* name)
+    {
+        qmlRegisterType<T>(_moduleName, 1, 0, name);
+    }
+
+    template <typename T>
+    void registerUncreatableType(const char* name)
+    {
+        qmlRegisterUncreatableType<T>(_moduleName, 1, 0, name,
+                                      "Not creatable in QML");
+    }
+
+    void registerUncreatableMetaObject(const QMetaObject& type,
+                                       const char* name)
+    {
+        qmlRegisterUncreatableMetaObject(type, _moduleName, 1, 0, name,
+                                         "Not creatable in QML");
+    }
+
+private:
+    const char* _moduleName;
+};
+
 namespace paddock
 {
+void registerKorgPadKontrolTypes()
+{
+    QmlModule module("Paddock.Pads.KorgPadKontrol");
+    using namespace korgPadKontrol;
+
+    module.registerUncreatableType<korgPadKontrol::Program>("Program");
+    module.registerType<TriggerController>("TriggerController");
+    module.registerType<TriggerModel>("TriggerModel");
+}
+
 void initResources()
 {
-    qmlRegisterUncreatableType<Program>("Paddock", 1, 0, "Program",
-                                        "Not creatable in QML");
-    qmlRegisterUncreatableType<Session>("Paddock", 1, 0, "Session",
-                                        "Not creatable in QML");
-    qmlRegisterUncreatableType<KorgPadKontrol>(
-        "Paddock", 1, 0, "KorgPadKontrol", "Not creatable in QML");
-    qmlRegisterUncreatableMetaObject(paddock::ControllerModel::staticMetaObject,
-                                     "Paddock", 1, 0, "ControllerModel",
-                                     "Not creatable in QML");
+    QmlModule module("Paddock");
+    module.registerUncreatableType<Program>("Program");
+    module.registerUncreatableType<Session>("Session");
 
-    qmlRegisterUncreatableType<korgPadKontrol::Program>(
-        "Paddock.Pads.KorgPadKontrol", 1, 0, "Program", "Not creatable in QML");
-    qmlRegisterType<korgPadKontrol::TriggerController>(
-        "Paddock.Pads.KorgPadKontrol", 1, 0, "TriggerController");
-    qmlRegisterType<korgPadKontrol::TriggerModel>(
-        "Paddock.Pads.KorgPadKontrol", 1, 0, "TriggerModel");
-
+    module.registerUncreatableType<KorgPadKontrol>("KorgPadKontrol");
+    module.registerUncreatableMetaObject(ControllerModel::staticMetaObject,
+                                         "ControllerModel");
     qRegisterMetaType<std::error_code>();
+
+    registerKorgPadKontrolTypes();
 }
 } // namespace paddock

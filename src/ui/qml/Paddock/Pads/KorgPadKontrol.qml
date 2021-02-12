@@ -6,4 +6,7 @@ PadUi.Controller {
     program: device.program
 
     enabled: device !== null && device.isConnected
+
+    width: 760
+    height: 1250
 }

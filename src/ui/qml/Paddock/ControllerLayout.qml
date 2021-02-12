@@ -7,19 +7,32 @@ Item {
     id: root
 
     property var device: undefined
+    implicitWidth: loader.width
+    implicitHeight: loader.height
+
+    signal reloaded
 
     Loader {
-        anchors.fill: parent
-        anchors.margins: Styling.sizes.spacings.min
+        id: loader
+        anchors.centerIn: parent
+
+        onLoaded: root.reloaded()
+
         Component {
             id: korgPadKontrol
+
             KorgPadKontrol {
                 device: root.device
             }
         }
+
         Component {
             id: noDevice
+
             Item {
+                width: 400
+                height: 400
+
                 Text {
                     anchors.centerIn: parent
                     text: "No supported device connected"

@@ -3,69 +3,83 @@ import QtQuick.Layouts 1.15
 
 import Paddock 1.0
 import Paddock.Pads.KorgPadKontrol 1.0
+import Paddock.Controls 1.0
 
-GridLayout {
+ColumnLayout {
     id: root
-    columns: 3
-    rows: 4
-    columnSpacing: Styling.sizes.spacings.min
-    rowSpacing: Styling.sizes.spacings.min
 
     property Program program
 
     Rectangle {
-        color: "transparent"
-        border.width: 1
-        id: topKnobs
-        Layout.columnSpan: 3
-        Layout.preferredHeight: root.height * 0.2
+        id: header
+        color: "#000000"
+        Layout.preferredHeight: (headerText.implicitHeight +
+                                 Styling.sizes.spacings.min * 2)
+        Layout.fillWidth: true
+        Layout.topMargin: Styling.sizes.spacings.min
+        Layout.leftMargin: Styling.sizes.spacings.min
+        Layout.rightMargin: Styling.sizes.spacings.min
+
+        Text {
+            id: headerText
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.topMargin: Styling.sizes.spacings.min
+            anchors.bottomMargin: Styling.sizes.spacings.min
+            anchors.leftMargin: Styling.sizes.spacings.min
+            text: "KORG padKontrol"
+            font.pointSize: Styling.sizes.fonts.title
+            color: "#FFFFFF"
+       }
+    }
+
+    Item {
+        id: topSection
+        Layout.preferredHeight: 120
         Layout.fillWidth: true
     }
 
-    Rectangle {
-        color: "transparent"
-        border.width: 1
-        id: settingSection
-        Layout.preferredHeight: root.height * 0.32
-        Layout.preferredWidth: root.width * 0.3
-    }
-
-    Rectangle {
-        color: "transparent"
-        border.width: 1
-        id: triggerPadSectionLeftButtons
-        Layout.rowSpan: 2
-        Layout.preferredHeight: root.height * 0.48
-        Layout.preferredWidth: root.width * 0.1
-        Layout.fillHeight: true
+    Text {
+        Layout.topMargin: Styling.sizes.spacings.x2
+        Layout.leftMargin: Styling.sizes.spacings.x2
+        text: "Pads"
+        font.pointSize: Styling.sizes.fonts.title
     }
 
     TriggerSection {
         id: triggerPadSection
         Layout.rowSpan: 3
-        Layout.preferredHeight: root.height * 0.8
-        Layout.preferredWidth: root.width * 0.6
-        Layout.fillHeight: true
         Layout.fillWidth: true
+        Layout.preferredHeight: width
+        Layout.maximumHeight: width
+        Layout.rightMargin: Styling.sizes.spacings.x2
+        Layout.leftMargin: Styling.sizes.spacings.x2
 
         program: root.program
     }
 
-    Rectangle {
-        color: "transparent"
-        border.width: 1
-        id: paremeterSection
-        Layout.preferredHeight: root.height * 0.16
-        Layout.preferredWidth: root.width * 0.3
+    RowLayout {
+        Layout.topMargin: Styling.sizes.spacings.x2
+        Text {
+            Layout.leftMargin: Styling.sizes.spacings.x2
+            text: "Pedal"
+            font.pointSize: Styling.sizes.fonts.title
+        }
     }
 
-    Rectangle {
-        color: "transparent"
-        border.width: 1
-        id: xySection
-        Layout.columnSpan: 2
-        Layout.preferredWidth: root.width * 0.4
-        Layout.preferredHeight: root.height * 0.32
+    RowLayout {
         Layout.fillWidth: true
+        Layout.preferredHeight: pedalPad.height
+        Layout.rightMargin: Styling.sizes.spacings.x2
+        Layout.leftMargin: Styling.sizes.spacings.x2
+        Layout.bottomMargin: Styling.sizes.spacings.x2
+
+        Pad {
+            id: pedalPad
+
+            width: (triggerPadSection.width -
+                    Styling.sizes.spacings.x2 * 3) * 0.25
+            height: width
+        }
     }
 }
