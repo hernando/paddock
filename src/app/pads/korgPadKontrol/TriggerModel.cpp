@@ -112,33 +112,11 @@ QVariant TriggerModel::data(const QModelIndex& index, int role) const
     throw std::range_error("Invalid role");
 }
 
-Program* TriggerModel::program()
-{
-    return _program;
-}
-
-void TriggerModel::setProgram(Program* program)
-{
-    if (program == _program)
-        return;
-
-    if (_program)
-        _program->disconnect(this);
-
-    _program = program;
-    connect(_program, &paddock::Program::changed, this,
-            &TriggerModel::updateModel);
-
-    updateModel();
-
-    emit programChanged();
-}
-
 void TriggerModel::updateModel()
 {
-    if (!_program || !_program->hasScene())
+    if (!hasScene())
         return; // TODO reset to default
-    const auto& scene = *_program->midiProgram().scene();
+    const auto& scene = *program()->midiProgram().scene();
 
     const auto knobBits = _knobAssignmentBits;
 

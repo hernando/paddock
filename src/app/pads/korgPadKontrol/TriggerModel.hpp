@@ -1,14 +1,14 @@
 #pragma once
 
+#include "ProgramObserver.hpp"
+
 #include "midi/pads/korgPadKontrol/Scene.hpp"
 
 #include <QAbstractListModel>
 
 namespace paddock::korgPadKontrol
 {
-class Program;
-
-class TriggerModel : public QAbstractListModel
+class TriggerModel : public QAbstractListModel, public ProgramObserver<TriggerModel>
 {
     Q_OBJECT
 
@@ -66,14 +66,11 @@ public:
     int rowCount(const QModelIndex& parent = QModelIndex()) const override;
     QVariant data(const QModelIndex& index, int role) const override;
 
-    Program* program();
-    void setProgram(Program* program);
-
 signals:
     void programChanged();
 
 private:
-    Program* _program{nullptr};
+    friend class ProgramObserver<TriggerModel>;
 
     midi::korgPadKontrol::Scene::Trigger _pads[16];
     std::array<short, 4> _knobAssignmentBits;
