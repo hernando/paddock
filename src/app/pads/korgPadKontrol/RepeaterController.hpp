@@ -1,12 +1,14 @@
 #pragma once
 
+#include "RepeaterModel.hpp"
+
 #include <QObject>
 
 namespace paddock::korgPadKontrol
 {
 class Program;
 
-class KnobController : public QObject
+class RepeaterController : public QObject
 {
     Q_OBJECT
 
@@ -14,16 +16,14 @@ class KnobController : public QObject
                    setProgram NOTIFY programChanged)
 
 public:
-    explicit KnobController(QObject* parent = nullptr);
+    explicit RepeaterController(QObject* parent = nullptr);
 
     Program* program();
     void setProgram(Program* program);
 
 public Q_SLOTS:
-    void toggleEnabled(int knob);
-    void togglePolarity(int knob);
-    void incrementParameter(int knob);
-    void decrementParameter(int knob);
+    void incrementParameter(int repeater, int parameter);
+    void decrementParameter(int repeater, int parameter);
 
 signals:
     void programChanged();

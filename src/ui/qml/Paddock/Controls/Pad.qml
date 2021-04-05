@@ -81,8 +81,8 @@ MouseArea {
 
             TextButton {
                 Layout.alignment: Qt.AlignRight
-                text: checked ? "ON" : "OFF"
-                checked: root.on
+                text: ticked ? "ON" : "OFF"
+                ticked: root.on
                 onClicked: root.toggleEnabled()
             }
             Text {
@@ -118,7 +118,7 @@ MouseArea {
                 }
                 IconButton {
                     enabled: root.on
-                    checked: root.hasFlamRoll
+                    ticked: root.hasFlamRoll
                     icon.name: "flam_roll"
                     onClicked: root.toggleFlamRoll()
                 }
@@ -127,26 +127,30 @@ MouseArea {
                 Layout.alignment: Qt.AlignRight
                 spacing: Styling.sizes.spacings.x2
                 TextButton {
+                    enabled: root.on
                     text: "X"
-                    checked: root.xAxisAssigned
+                    ticked: root.xAxisAssigned
                     onClicked: root.toggleKnobAssignment(2)
                 }
                 TextButton {
+                    enabled: root.on
                     text: "Y"
-                    checked: root.yAxisAssigned
+                    ticked: root.yAxisAssigned
                     onClicked: root.toggleKnobAssignment(3)
                 }
             }
             TextButton {
+                enabled: root.on
                 Layout.alignment: Qt.AlignRight
                 text: "Knob 1"
-                checked: root.knob1Assigned
+                ticked: root.knob1Assigned
                 onClicked: root.toggleKnobAssignment(0)
             }
             TextButton {
+                enabled: root.on
                 Layout.alignment: Qt.AlignRight
                 text: "Knob 2"
-                checked: root.knob2Assigned
+                ticked: root.knob2Assigned
                 onClicked: root.toggleKnobAssignment(1)
             }
             Item {
@@ -175,7 +179,7 @@ MouseArea {
 
                 text: "\u266A" + root.noteName.replace("#", "\u266F")
                 fontSizeMode: Text.VerticalFit
-                font.pointSize: 24
+                font.pointSize: Styling.sizes.fonts.bigLabel
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
                 WheelHandler {
@@ -202,7 +206,7 @@ MouseArea {
                     anchors.fill: parent
                     text: root.velocity
                     fontSizeMode: Text.Fit
-                    font.pointSize: 24
+                    font.pointSize: Styling.sizes.fonts.bigLabel
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                 }
@@ -270,7 +274,7 @@ MouseArea {
                 Layout.fillWidth: true
                 text: "\u2193" + root.value
                 fontSizeMode: Text.Fit
-                font.pointSize: 24
+                font.pointSize: Styling.sizes.fonts.bigLabel
                 horizontalAlignment: Text.AlignLeft
 
                 WheelHandler {
@@ -289,7 +293,7 @@ MouseArea {
                 Layout.fillWidth: true
                 text: "\u2191" + root.releaseValue
                 fontSizeMode: Text.Fit
-                font.pointSize: 24
+                font.pointSize: Styling.sizes.fonts.bigLabel
                 horizontalAlignment: Text.AlignLeft
 
                 WheelHandler {

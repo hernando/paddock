@@ -17,10 +17,18 @@ target_sources(paddock PRIVATE
   pads/korgPadKontrol/KnobModel.cpp
   pads/korgPadKontrol/Program.hpp
   pads/korgPadKontrol/Program.cpp
+  pads/korgPadKontrol/RepeaterController.hpp
+  pads/korgPadKontrol/RepeaterController.cpp
+  pads/korgPadKontrol/RepeaterModel.hpp
+  pads/korgPadKontrol/RepeaterModel.cpp
   pads/korgPadKontrol/TriggerController.hpp
   pads/korgPadKontrol/TriggerController.cpp
   pads/korgPadKontrol/TriggerModel.hpp
   pads/korgPadKontrol/TriggerModel.cpp
+  pads/korgPadKontrol/XyController.hpp
+  pads/korgPadKontrol/XyController.cpp
+  pads/korgPadKontrol/XyModel.hpp
+  pads/korgPadKontrol/XyModel.cpp
   pads/models.hpp
   pads/pads.hpp
   pads/pads.cpp

@@ -9,6 +9,7 @@ QQC2.Button {
 
     width: Styling.sizes.widths.iconButton
     height: width
+    property bool ticked: false
 
     padding: 0
 
@@ -16,7 +17,7 @@ QQC2.Button {
     icon.color: {
         if (root.pressed) {
             return Styling.colors.buttons.iconPressed
-        } else if (root.checked) {
+        } else if (root.ticked) {
             return root.hovered
                 ? Styling.hovered(Styling.colors.buttons.iconChecked)
                 : Styling.colors.buttons.iconChecked

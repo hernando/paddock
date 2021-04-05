@@ -35,6 +35,7 @@ struct StylingData
             int min{4};
             int x2{8};
             int x3{12};
+            int x4{16};
         } spacings;
 
         struct Widths
@@ -53,6 +54,8 @@ struct StylingData
         struct Fonts
         {
             int title{16};
+            int subtitle{14};
+            int bigLabel{24};
         } fonts;
     } sizes;
 
@@ -122,6 +125,7 @@ Styling::Styling()
     DECLARE_STYLE_SIZE(spacings, min);
     DECLARE_STYLE_SIZE(spacings, x2);
     DECLARE_STYLE_SIZE(spacings, x3);
+    DECLARE_STYLE_SIZE(spacings, x4);
 
     DECLARE_GROUP(_sizes, widths)
     DECLARE_STYLE_SIZE(widths, pad);
@@ -134,6 +138,8 @@ Styling::Styling()
 
     DECLARE_GROUP(_sizes, fonts)
     DECLARE_STYLE_SIZE(fonts, title);
+    DECLARE_STYLE_SIZE(fonts, subtitle);
+    DECLARE_STYLE_SIZE(fonts, bigLabel);
 }
 
 QColor Styling::hovered(QColor color)

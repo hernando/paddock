@@ -9,6 +9,7 @@ QQC2.Button {
 
     padding: 0
     width: contentItem.implicitWidth
+    property bool ticked: false
 
     contentItem: Text {
         text: root.text
@@ -17,7 +18,7 @@ QQC2.Button {
         color: {
             if (root.pressed) {
                 return Styling.colors.buttons.textPressed
-            } else if (root.checked) {
+            } else if (root.ticked) {
                 return root.hovered
                     ? Styling.hovered(Styling.colors.buttons.textChecked)
                     : Styling.colors.buttons.textChecked

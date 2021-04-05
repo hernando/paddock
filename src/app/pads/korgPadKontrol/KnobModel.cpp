@@ -10,9 +10,9 @@ KnobModel::KnobModel(QObject* parent)
 QHash<int, QByteArray> KnobModel::roleNames() const
 {
     return {{static_cast<int>(Role::Enabled), "enabled"},
-            {static_cast<int>(Role::KnobType), "type"},
-            {static_cast<int>(Role::Parameter), "paremeter"},
-            {static_cast<int>(Role::ReversePolarity), "reservePolarity"}};
+            {static_cast<int>(Role::ActionType), "type"},
+            {static_cast<int>(Role::Parameter), "parameter"},
+            {static_cast<int>(Role::ReversePolarity), "reversePolarity"}};
 }
 
 int KnobModel::rowCount(const QModelIndex& parent) const
@@ -32,7 +32,7 @@ QVariant KnobModel::data(const QModelIndex& index, int role) const
     {
     case Role::Enabled:
         return QVariant::fromValue(knob.enabled);
-    case Role::KnobType:
+    case Role::ActionType:
         return QVariant::fromValue(static_cast<int>(knob.type));
     case Role::Parameter:
         return QVariant::fromValue(knob.param);
@@ -52,6 +52,7 @@ void KnobModel::updateModel()
 
     _knobs[0] = scene.knobs[0];
     _knobs[1] = scene.knobs[1];
+    emit dataChanged(index(0, 0), index(1, 0));
 }
 
 } // namespace paddock::korgPadKontrol

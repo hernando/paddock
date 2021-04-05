@@ -5,8 +5,12 @@
 #include "pads/korgPadKontrol/Program.hpp"
 #include "pads/korgPadKontrol/KnobController.hpp"
 #include "pads/korgPadKontrol/KnobModel.hpp"
+#include "pads/korgPadKontrol/RepeaterController.hpp"
+#include "pads/korgPadKontrol/RepeaterModel.hpp"
 #include "pads/korgPadKontrol/TriggerController.hpp"
 #include "pads/korgPadKontrol/TriggerModel.hpp"
+#include "pads/korgPadKontrol/XyController.hpp"
+#include "pads/korgPadKontrol/XyModel.hpp"
 
 #include <QtQml/qqml.h>
 
@@ -53,8 +57,12 @@ void registerKorgPadKontrolTypes()
     module.registerUncreatableType<korgPadKontrol::Program>("Program");
     module.registerType<KnobController>("KnobController");
     module.registerType<KnobModel>("KnobModel");
+    module.registerType<RepeaterController>("RepeaterController");
+    module.registerType<RepeaterModel>("RepeaterModel");
     module.registerType<TriggerController>("TriggerController");
     module.registerType<TriggerModel>("TriggerModel");
+    module.registerType<XyModel>("XyModel");
+    module.registerType<XyController>("XyController");
 }
 
 void initResources()

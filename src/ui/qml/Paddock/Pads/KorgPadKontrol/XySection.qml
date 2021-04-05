@@ -12,19 +12,19 @@ ColumnLayout {
 
     spacing: Styling.sizes.spacings.min
 
-    KnobModel {
+    XyModel {
         id: knobModel
         program: root.program
     }
 
-    KnobController {
+    XyController {
         id: controller
         program: root.program
     }
 
     Repeater {
         model: knobModel
-        delegate: Knob {
+        delegate: Axis {
             Layout.fillWidth: true
             Layout.preferredHeight: implicitHeight
 
@@ -32,11 +32,15 @@ ColumnLayout {
             type: model.type
             parameter: model.parameter
             reversed: model.reversePolarity
+            releaseValue: model.releaseValue
+            name: model.name
 
             onToggleEnabled: controller.toggleEnabled(index)
             onTogglePolarity: controller.togglePolarity(index)
             onIncrementParameter: controller.incrementParameter(index)
             onDecrementParameter: controller.decrementParameter(index)
+            onIncrementReleaseValue: controller.incrementReleaseValue(index)
+            onDecrementReleaseValue: controller.decrementReleaseValue(index)
         }
     }
 

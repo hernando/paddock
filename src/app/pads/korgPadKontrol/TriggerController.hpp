@@ -11,7 +11,7 @@ class TriggerController : public QObject
     Q_OBJECT
 
     Q_PROPERTY(paddock::korgPadKontrol::Program* program READ program WRITE
-                   setProgram NOTIFY programChanged)
+               setProgram NOTIFY programChanged)
 
 public:
     explicit TriggerController(QObject* parent = nullptr);

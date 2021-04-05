@@ -6,7 +6,7 @@ namespace paddock::korgPadKontrol
 {
 class Program;
 
-class KnobController : public QObject
+class XyController : public QObject
 {
     Q_OBJECT
 
@@ -14,16 +14,18 @@ class KnobController : public QObject
                    setProgram NOTIFY programChanged)
 
 public:
-    explicit KnobController(QObject* parent = nullptr);
+    explicit XyController(QObject* parent = nullptr);
 
     Program* program();
     void setProgram(Program* program);
 
 public Q_SLOTS:
-    void toggleEnabled(int knob);
-    void togglePolarity(int knob);
-    void incrementParameter(int knob);
-    void decrementParameter(int knob);
+    void toggleEnabled(int axis);
+    void togglePolarity(int axis);
+    void incrementParameter(int axis);
+    void decrementParameter(int axis);
+    void incrementReleaseValue(int axis);
+    void decrementReleaseValue(int axis);
 
 signals:
     void programChanged();

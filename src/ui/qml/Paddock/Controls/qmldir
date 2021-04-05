@@ -1,6 +1,8 @@
 module Paddock.Controls
+Axis 1.0 Axis.qml
 Button 1.0 Button.qml
 IconButton 1.0 IconButton.qml
 Knob 1.0 Knob.qml
+KnobAction 1.0 KnobAction.qml
 Pad 1.0 Pad.qml
 TextButton 1.0 TextButton.qml

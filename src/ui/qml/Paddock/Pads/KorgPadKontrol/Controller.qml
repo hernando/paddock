@@ -30,7 +30,7 @@ ColumnLayout {
             text: "KORG padKontrol"
             font.pointSize: Styling.sizes.fonts.title
             color: "#FFFFFF"
-       }
+        }
     }
 
     Item {
@@ -58,28 +58,74 @@ ColumnLayout {
         program: root.program
     }
 
+    property int _onePadWidth: (triggerPadSection.width -
+                                Styling.sizes.spacings.x2 * 3) * 0.25
+
     RowLayout {
+        width: parent.width
+
         Layout.topMargin: Styling.sizes.spacings.x2
+        Layout.fillWidth: true
+
+        spacing: Styling.sizes.spacings.x2
+
         Text {
             Layout.leftMargin: Styling.sizes.spacings.x2
             text: "Pedal"
             font.pointSize: Styling.sizes.fonts.title
+            Layout.preferredWidth: _onePadWidth
+        }
+        Text {
+            text: "Knobs"
+            font.pointSize: Styling.sizes.fonts.title
+            Layout.preferredWidth: _onePadWidth
+        }
+        Text {
+            text: "X-Y Pad"
+            font.pointSize: Styling.sizes.fonts.title
+            Layout.preferredWidth: _onePadWidth
+        }
+        Text {
+            text: "Repeaters"
+            font.pointSize: Styling.sizes.fonts.title
+            Layout.preferredWidth: _onePadWidth
         }
     }
 
     RowLayout {
         Layout.fillWidth: true
-        Layout.preferredHeight: pedalPad.height
         Layout.rightMargin: Styling.sizes.spacings.x2
         Layout.leftMargin: Styling.sizes.spacings.x2
         Layout.bottomMargin: Styling.sizes.spacings.x2
 
-        Pad {
-            id: pedalPad
+        spacing: Styling.sizes.spacings.x2
 
-            width: (triggerPadSection.width -
-                    Styling.sizes.spacings.x2 * 3) * 0.25
-            height: width
+        Pad {
+            Layout.alignment: Qt.AlignTop
+            implicitWidth: _onePadWidth
+            height: _onePadWidth
         }
+
+        KnobSection {
+            Layout.maximumWidth: _onePadWidth
+            height: _onePadWidth
+            program: root.program
+        }
+
+        XySection {
+            Layout.maximumWidth: _onePadWidth
+            height: _onePadWidth
+            program: root.program
+        }
+
+        RepeaterSection {
+            Layout.maximumWidth: _onePadWidth
+            height: _onePadWidth
+            program: root.program
+        }
+    }
+
+    Item {
+        Layout.fillHeight: true
     }
 }
