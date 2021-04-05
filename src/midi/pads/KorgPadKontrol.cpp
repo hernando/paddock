@@ -20,8 +20,6 @@
 #include <cassert>
 #include <mutex>
 
-#include <iostream>
-
 #include "korgPadKontrol/scenePrinters.hpp"
 
 namespace paddock::midi

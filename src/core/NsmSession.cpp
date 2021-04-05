@@ -8,8 +8,6 @@
 
 #include <unistd.h>
 
-#include <iostream>
-
 namespace paddock::core
 {
 namespace

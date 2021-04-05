@@ -90,7 +90,7 @@ struct Scene
     {
         unsigned char minSpeed; // min 40 if roll
         unsigned char maxSpeed; // max 240 if roll
-        Value7bit minVolume;
+        Value7bit minVolume; // min 1
         Value7bit maxVolume;
     };
 

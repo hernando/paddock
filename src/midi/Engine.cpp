@@ -15,8 +15,6 @@
 
 #include <thread>
 
-#include <iostream>
-
 namespace paddock::midi
 {
 class AbstractEngine

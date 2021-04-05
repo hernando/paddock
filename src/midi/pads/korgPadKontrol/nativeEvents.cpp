@@ -1,8 +1,6 @@
 #include "nativeEvents.hpp"
 #include "sysex.hpp"
 
-#include <iostream>
-
 namespace paddock::midi::korgPadKontrol
 {
 std::optional<Event> decodeEvent(std::span<const std::byte> message)

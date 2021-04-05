@@ -6,8 +6,6 @@
 #include <poll.h>
 #include <string.h>
 
-#include <iostream>
-
 namespace paddock::core::posix
 {
 Expected<unsigned int> poll(std::span<PollDescriptor> descriptors,

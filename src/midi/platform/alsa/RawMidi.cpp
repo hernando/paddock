@@ -3,8 +3,6 @@
 #include "core/errors.hpp"
 #include "midi/errors.hpp"
 
-#include <iostream>
-
 namespace paddock::midi::alsa
 {
 namespace

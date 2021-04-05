@@ -4,8 +4,6 @@
 #include "midi/pads/korgPadKontrol/scenePrinters.hpp"
 #include "midi/pads/korgPadKontrol/sysex.hpp"
 
-#include <iostream>
-
 namespace paddock
 {
 namespace

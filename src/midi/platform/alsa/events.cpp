@@ -5,7 +5,6 @@
 
 #include <alsa/asoundlib.h>
 
-#include <iostream>
 #include <string>
 #include <vector>
 
