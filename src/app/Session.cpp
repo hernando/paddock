@@ -4,6 +4,7 @@
 
 #include "Program.hpp"
 
+#include "pads/korgPadKontrol/Program.hpp"
 #include "pads/pads.hpp"
 
 #include "utils.hpp"
@@ -87,17 +88,19 @@ public:
                        *_padController);
     }
 
-    bool hasSession() const { return _nsmSession.has_value(); }
+    bool hasNsmSession() const { return _nsmSession.has_value(); }
 
     const std::string& name() const { return _name; }
 
     std::error_code open(const std::string& projectPath,
-                         const std::string& sessionName,
+                         const std::string& /* sessionName */,
                          const std::string& clientId)
     {
         if (auto ret = execInMainThread([&] {
-                openProgram(projectPath + "/program.pad");
-                _name = clientId;
+                auto ret = openSession(projectPath);
+                if (ret)
+                    _name = clientId;
+                return ret;
             });
             !ret)
         {
@@ -108,7 +111,11 @@ public:
 
     std::error_code save()
     {
-        core::log() << "SAVE";
+        if (auto ret = execInMainThread([&] { return saveSession(_filePath); });
+            !ret)
+        {
+            return ret.error();
+        }
         return std::error_code{}; // success
     }
 
@@ -120,6 +127,9 @@ public:
 
     std::error_code initMidi()
     {
+        if (_midiEngine)
+            return std::error_code{};
+
         auto engine = midi::Engine::create();
         if (!engine)
             return engine.error();
@@ -131,6 +141,13 @@ public:
                     [this, event] { _processEngineEvent(event); });
             });
 
+        if (!hasNsmSession())
+            return lookUpForKnownController();
+        return std::error_code{};
+    }
+
+    std::error_code lookUpForKnownController()
+    {
         auto controller = makePad(_parent, &*_midiEngine, name());
 
         if (controller)
@@ -148,6 +165,8 @@ public:
 
         emit _parent->controllerChanged();
 
+        _updateProgramFromController();
+
         return std::error_code{};
     }
 
@@ -160,25 +179,28 @@ public:
             *_padController);
     }
 
-    std::error_code openProgram(std::string filePath)
+    std::error_code openSession(std::string filePath)
     {
-        // TODO load a program
-        auto program = new Program(_parent);
-
-        if (!program)
-            return std::make_error_code(std::errc::io_error);
+        initMidi();
 
         _filePath = std::move(filePath);
 
-        if (_program)
-            _program->deleteLater();
+        core::log() << "Opening session " << filePath;
 
-        _program = program;
+        _padController = makePad(_parent, ControllerModel::KorgPadKontrol);
+        assert(_padController);
 
-        connect(_program, &Program::dirtyChanged,
-                [this]() { this->sendDirty(_program->dirty()); });
+        tryReconnectPad(*_padController, &*_midiEngine, name());
 
-        emit _parent->programChanged();
+        emit _parent->controllerChanged();
+
+        _updateProgramFromController();
+
+        return std::error_code{}; // success
+    }
+
+    std::error_code saveSession(std::string filePath) const
+    {
         return std::error_code{}; // success
     }
 
@@ -271,6 +293,19 @@ private:
             },
             *_padController);
     }
+
+    void _updateProgramFromController()
+    {
+        _program =
+            std::visit([](auto controller) { return controller->program(); },
+                       *_padController);
+
+        connect(_program, &Program::dirtyChanged,
+                [this]() { this->sendDirty(_program->dirty()); });
+
+        emit _parent->programChanged();
+    }
+
 }; // namespace paddock
 
 Session::Session()
@@ -292,7 +327,7 @@ Program* Session::program() const
 
 bool Session::isNsmSession() const
 {
-    return _impl->hasSession();
+    return _impl->hasNsmSession();
 }
 
 const std::string& Session::name() const
@@ -305,9 +340,19 @@ QVariant Session::controller()
     return _impl->controller();
 }
 
-std::error_code Session::openProgram(const std::string& filePath)
+std::error_code Session::open(const std::string& filePath)
 {
-    return _impl->openProgram(filePath);
+    return _impl->openSession(filePath);
+}
+
+std::error_code Session::save(const std::string& filePath) const
+{
+    return _impl->saveSession(filePath);
+}
+
+void Session::save(const QUrl& url) const
+{
+    save(url.toLocalFile().toStdString());
 }
 
 } // namespace paddock

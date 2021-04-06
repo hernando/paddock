@@ -32,7 +32,7 @@ QVariant RepeaterModel::data(const QModelIndex& index, int role) const
     switch (static_cast<Role>(role))
     {
     case Role::Name:
-        return repeaterIndex == 0 ? "Flam" : "Roll";
+        return repeaterIndex == 0 ? tr("Flam") : tr("Roll");
     case Role::MinSpeed:
         return QVariant::fromValue(repeater.minSpeed);
     case Role::MaxSpeed:

@@ -19,6 +19,7 @@ public:
         : _parent{parent}
         , _program{nullptr}
     {
+        setProgram(new korgPadKontrol::Program{parent});
     }
 
     _Impl(KorgPadKontrol* parent, midi::KorgPadKontrol&& controller)

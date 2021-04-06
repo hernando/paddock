@@ -33,6 +33,7 @@ class KorgPadKontrol : public QObject
 public:
     static constexpr ControllerModel::Model model =
         ControllerModel::KorgPadKontrol;
+    using MidiController = midi::KorgPadKontrol;
 
     KorgPadKontrol(QObject* parent);
     KorgPadKontrol(QObject* parent, midi::KorgPadKontrol&& controller);

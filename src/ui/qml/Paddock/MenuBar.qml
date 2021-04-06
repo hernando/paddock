@@ -10,6 +10,8 @@ QQC.MenuBar {
 
     signal quitRequest
 
+    signal saveAsRequest
+
     QQC.Menu {
         title: qsTr("&File")
         MenuItem {
@@ -31,9 +33,9 @@ QQC.MenuBar {
             shortcut: "Ctrl+S"
         }
         MenuItem {
-            enabled: !session.isNsmSession
-            text: qsTr("Save As...")
+            text: session.isNsmSession ? qsTr("Export...") : qsTr("Save as...")
             shortcut: "Ctrl+Shift+S"
+            onTriggered: root.saveAsRequest()
         }
         QQC.MenuSeparator { }
         MenuItem { text: qsTr("Close") }

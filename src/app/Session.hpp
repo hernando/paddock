@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QObject>
+#include <QUrl>
 #include <QVariant>
 
 #include <memory>
@@ -41,8 +42,11 @@ public:
     /// Name to use for the JACK client
     const std::string& name() const;
 
-    std::error_code openProgram(const std::string& filePath);
+    std::error_code open(const std::string& filePath);
+    std::error_code save(const std::string& filePath) const;
 
+public slots:
+    void save(const QUrl& filePath) const;
 
 signals:
     void programChanged();

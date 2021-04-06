@@ -2,6 +2,8 @@
 
 #include <QObject>
 
+#include "utils/Expected.hpp"
+
 namespace paddock
 {
 
@@ -20,6 +22,9 @@ public:
     }
 
     void setDirty(bool dirty);
+
+    virtual QByteArray serialize() const = 0;
+    static Expected<Program*> unserialize(QObject* parent, QByteArray bytes);
 
 signals:
     void dirtyChanged();

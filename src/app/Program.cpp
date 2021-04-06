@@ -15,4 +15,9 @@ void Program::setDirty(bool dirty)
         Q_EMIT dirtyChanged();
 }
 
+Expected<Program*> Program::unserialize(QObject* parent, QByteArray bytes)
+{
+    return nullptr;
+}
+
 } // namespace paddock

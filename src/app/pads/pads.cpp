@@ -34,6 +34,45 @@ Expected<midi::ClientInfo> getDeviceInfo(midi::Engine* engine,
 
     return std::move(*info);
 }
+
+template <typename PadT>
+std::error_code tryReconnectPad(PadT& pad, midi::Engine* engine,
+                                std::string midiClientName,
+                                const midi::ClientId& deviceId)
+{
+    auto deviceInfo = getDeviceInfo(engine, deviceId);
+    if (!deviceInfo)
+        return deviceInfo.error();
+
+    if (!PadT::MidiController::matches(*deviceInfo))
+        return std::error_code{midi::EngineError::noDeviceFound};
+
+    auto controller =
+        PadT::MidiController::open(engine, *deviceInfo, midiClientName);
+    if (!controller)
+        return controller.error();
+    return pad.setController(std::move(*controller));
+}
+
+template <typename PadT>
+std::error_code tryReconnectPad(PadT& pad, midi::Engine* engine,
+                                std::string midiClientName)
+{
+    const auto infos = engine->queryClientInfos();
+    for (const auto& deviceInfo : infos)
+    {
+        if (!PadT::MidiController::matches(deviceInfo))
+            continue;
+
+        auto controller =
+            PadT::MidiController::open(engine, deviceInfo, midiClientName);
+        if (!controller)
+            return controller.error();
+        return pad.setController(std::move(*controller));
+    }
+    return std::error_code{midi::EngineError::noDeviceFound};
+}
+
 } // namespace
 
 Expected<Pad> makePad(QObject* parent, midi::Engine* engine,
@@ -69,25 +108,35 @@ Expected<Pad> makePad(QObject* parent, midi::Engine* engine,
         });
 }
 
+std::optional<Pad> makePad(QObject* parent, ControllerModel::Model model)
+{
+    switch (model)
+    {
+    case ControllerModel::Model::KorgPadKontrol:
+        return new KorgPadKontrol{parent};
+    default:
+        return std::nullopt;
+    }
+}
+
 std::error_code tryReconnectPad(Pad& pad, midi::Engine* engine,
                                 std::string midiClientName,
                                 const midi::ClientId& deviceId)
 {
-    auto deviceInfo = getDeviceInfo(engine, deviceId);
-    if (!deviceInfo)
-        return deviceInfo.error();
-
     return std::visit(
-        overloaded{[&](KorgPadKontrol* pad) {
-            if (!midi::KorgPadKontrol::matches(*deviceInfo))
-                return std::error_code{midi::EngineError::noDeviceFound};
+        [&](auto* pad) {
+            return tryReconnectPad(*pad, engine, midiClientName, deviceId);
+        },
+        pad);
+} // namespace paddock
 
-            auto controller =
-                midi::KorgPadKontrol::open(engine, *deviceInfo, midiClientName);
-            if (!controller)
-                return controller.error();
-            return pad->setController(std::move(*controller));
-        }},
+std::error_code tryReconnectPad(Pad& pad, midi::Engine* engine,
+                                std::string midiClientName)
+{
+    return std::visit(
+        [&](auto* pad) {
+            return tryReconnectPad(*pad, engine, midiClientName);
+        },
         pad);
 }
 

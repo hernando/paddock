@@ -35,7 +35,7 @@ QVariant XyModel::data(const QModelIndex& index, int role) const
     case Role::Enabled:
         return QVariant::fromValue(axis.enabled);
     case Role::Name:
-        return axisIndex == 0 ? "X axis" : "Y axis";
+        return axisIndex == 0 ? tr("X axis") : tr("Y axis");
     case Role::ActionType:
         return QVariant::fromValue(static_cast<int>(axis.type));
     case Role::Parameter:
