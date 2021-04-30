@@ -2,9 +2,7 @@
 
 #include <QObject>
 
-namespace paddock
-{
-namespace ControllerModel
+namespace paddock::ControllerModel
 {
     Q_NAMESPACE
 
@@ -14,5 +12,5 @@ namespace ControllerModel
     };
 
     Q_ENUM_NS(Model)
-};
 }
+

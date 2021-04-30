@@ -26,13 +26,12 @@ void Program::resetScene(midi::korgPadKontrol::Scene scene)
     setDirty(true);
 }
 
-QByteArray Program::serialize() const
+std::string Program::serialize() const
 {
-    QByteArray bytes;
-    return bytes;
+    return "{}";
 }
 
-std::error_code Program::unserialize(QByteArray bytes)
+std::error_code Program::deserialize(const std::string& bytes)
 {
     (void)bytes;
     return std::error_code();

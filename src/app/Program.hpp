@@ -6,7 +6,6 @@
 
 namespace paddock
 {
-
 class Program : public QObject
 {
     Q_OBJECT
@@ -16,15 +15,12 @@ class Program : public QObject
 public:
     Program(QObject* parent);
 
-    bool dirty() const
-    {
-        return _dirty;
-    }
+    bool dirty() const { return _dirty; }
 
     void setDirty(bool dirty);
 
-    virtual QByteArray serialize() const = 0;
-    static Expected<Program*> unserialize(QObject* parent, QByteArray bytes);
+    virtual std::string serialize() const = 0;
+    virtual std::error_code deserialize(const std::string& bytes) = 0;
 
 signals:
     void dirtyChanged();

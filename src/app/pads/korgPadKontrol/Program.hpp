@@ -19,8 +19,8 @@ public:
     // Reset the scene without triggering the programChanged signal
     void resetScene(midi::korgPadKontrol::Scene scene);
 
-    QByteArray serialize() const;
-    std::error_code unserialize(QByteArray bytes);
+    std::string serialize() const;
+    std::error_code deserialize(const std::string& bytes);
 
 private:
     midi::korgPadKontrol::Program _program;

@@ -6,7 +6,7 @@ import Paddock.Pads 1.0
 Item {
     id: root
 
-    property var device: undefined
+    property var controller: undefined
     implicitWidth: loader.width
     implicitHeight: loader.height
 
@@ -22,7 +22,7 @@ Item {
             id: korgPadKontrol
 
             KorgPadKontrol {
-                device: root.device
+                controller: root.controller
             }
         }
 
@@ -41,10 +41,10 @@ Item {
         }
 
         sourceComponent: {
-            if (root.device === undefined) {
+            if (root.controller === undefined) {
                 return noDevice
             }
-            switch (device.model) {
+            switch (controller.model) {
             case ControllerModel.KorgPadKontrol: return korgPadKontrol
             }
             return noDevice

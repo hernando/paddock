@@ -42,7 +42,7 @@ ApplicationWindow {
     ControllerLayout {
         id: layout
 
-        device: session.controller
+        controller: session.controller
 
         onReloaded: {
             root.width = Math.max(400, layout.implicitWidth)

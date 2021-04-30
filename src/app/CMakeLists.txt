@@ -9,6 +9,9 @@ target_sources(paddock PRIVATE
   resources.cpp
   utils.hpp
 
+  io/Session.hpp
+  io/Session.cpp
+
   pads/KorgPadKontrol.hpp
   pads/KorgPadKontrol.cpp
   pads/korgPadKontrol/KnobController.hpp
@@ -43,6 +46,7 @@ target_link_libraries(
     paddock
   PRIVATE
     paddock::core
+    paddock::io
     paddock::midi
     paddock::ui
     Qt5::Core

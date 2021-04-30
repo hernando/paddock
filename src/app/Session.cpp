@@ -13,6 +13,8 @@
 #include "midi/errors.hpp"
 #include "midi/pads/KorgPadKontrol.hpp"
 
+#include "io/Session.hpp"
+
 #include "core/Log.hpp"
 
 #include "utils/overloaded.hpp"
@@ -165,7 +167,7 @@ public:
 
         emit _parent->controllerChanged();
 
-        _updateProgramFromController();
+        _updateProgram();
 
         return std::error_code{};
     }
@@ -187,21 +189,49 @@ public:
 
         core::log() << "Opening session " << filePath;
 
-        _padController = makePad(_parent, ControllerModel::KorgPadKontrol);
+        auto session = io::readSession(_filePath);
+
+        if (!session)
+        {
+            core::log() << session.error().message();
+            return lookUpForKnownController();
+        }
+
+        _padController = makePad(_parent, session->model);
         assert(_padController);
 
         tryReconnectPad(*_padController, &*_midiEngine, name());
 
         emit _parent->controllerChanged();
 
-        _updateProgramFromController();
+        if (auto ret = std::visit(
+                [&session](const auto& controller) {
+                    return controller->program()->deserialize(session->program);
+                },
+                *_padController);
+            !ret)
+        {
+            core::log() << ret.message();
+            return lookUpForKnownController();
+        }
+
+        _updateProgram();
 
         return std::error_code{}; // success
     }
 
     std::error_code saveSession(std::string filePath) const
     {
-        return std::error_code{}; // success
+        if (_padController)
+            return midi::EngineError::noDeviceFound;
+
+        return std::visit(
+            [&filePath](const auto& controller) {
+                return io::writeSession(
+                    filePath,
+                    {controller->model, controller->program()->serialize()});
+            },
+            *_padController);
     }
 
     Program* program() const { return _program; }
@@ -294,7 +324,7 @@ private:
             *_padController);
     }
 
-    void _updateProgramFromController()
+    void _updateProgram()
     {
         _program =
             std::visit([](auto controller) { return controller->program(); },
@@ -305,8 +335,7 @@ private:
 
         emit _parent->programChanged();
     }
-
-}; // namespace paddock
+};
 
 Session::Session()
     : _impl{std::make_unique<_Impl>(this)}
